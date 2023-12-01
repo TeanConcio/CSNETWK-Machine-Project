@@ -24,14 +24,17 @@ public class ServerClass
 
 	public static void main(String[] args)
 	{
-		System.out.println("Server: Listening on port " + SERVER_PORT + "...");
 
-		// Loop to accept multiple clients
-		while (true) {
-			try {
+		ServerSocket serverSocket = null;
 
-				// Initialize ServerSocket and Socket and accept connection
-				ServerSocket serverSocket = new ServerSocket(SERVER_PORT);
+		try {
+			// Initialize ServerSocket
+			serverSocket = new ServerSocket(SERVER_PORT);
+			System.out.println("Server: Listening on port " + SERVER_PORT + "...");
+
+			// Loop to accept multiple clients
+			while (true) {
+				// Initialize Socket and accept connection
 				Socket serverEndpoint = serverSocket.accept();
 				System.out.println("Server: New client connected: " + serverEndpoint.getRemoteSocketAddress());
 				
@@ -49,16 +52,21 @@ public class ServerClass
 				// Receive the function to be performed
 				while (decideFunction(user)){}
 
-				serverSocket.close();
+				serverEndpoint.close();
 			}
-			catch (Exception e)
-			{
-				e.printStackTrace();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+		finally {
+			if (serverSocket != null) {
+				try {
+					serverSocket.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
-			finally
-			{
-				System.out.println("Server: Connection is terminated.");
-			}
+			System.out.println("Server: Connection is terminated.");
 		}
 	}
 
@@ -66,18 +74,24 @@ public class ServerClass
 	public static boolean decideFunction(UserClass user) {
 
 		try {
-
 			// Receive the function to be performed
 			String input[] = user.disReader.readUTF().split(" ");
 
 			// Decide which function to perform
 			switch (input[0]) {
+
+				case "/join":
+					user.dosWriter.writeUTF("ALREADY CONNECTED");
+					return true;
+
 				case "/register":
 					register(user, input[1]);
 					return true;
+
 				case "/leave":
 					leave(user);
 					return false;
+
 				case "/dir":
 					if (user.userHandle == null) {
 						user.dosWriter.writeUTF("NOT REGISTERED");
@@ -85,6 +99,7 @@ public class ServerClass
 					}
 					dir(user);
 					return true;
+
 				case "/store":
 					if (user.userHandle == null) {
 						user.dosWriter.writeUTF("NOT REGISTERED");
@@ -92,6 +107,7 @@ public class ServerClass
 					}
 					store(user, input[1]);
 					return true;
+
 				case "/get":
 					if (user.userHandle == null) {
 						user.dosWriter.writeUTF("NOT REGISTERED");
@@ -99,6 +115,7 @@ public class ServerClass
 					}
 					get(user, input[1]);
 					return true;
+
 				default:
 					user.dosWriter.writeUTF("INVALID FUNCTION");
 					return true;
@@ -126,7 +143,6 @@ public class ServerClass
 	public static void register(UserClass user, String userHandle) {
 
 		try {
-
 			// Check if user handle is already taken
 			if (user.userHandle != null) {
 				user.dosWriter.writeUTF("USER HANDLE ALREADY REGISTERED");
@@ -148,7 +164,6 @@ public class ServerClass
 	public static void leave(UserClass user) {
 
 		try {
-
 			// Remove user from list
 			userList.remove(user);
 
@@ -163,7 +178,6 @@ public class ServerClass
 	public static void dir(UserClass user) {
 
 		try {
-
 			// Send the number of files
 			user.dosWriter.writeInt(fileList.size());
 
@@ -181,7 +195,6 @@ public class ServerClass
 	public static void store(UserClass user, String filename) {
 
 		try {
-
 			// Receive the file size
 			int fileSize = user.disReader.readInt();
 
@@ -203,7 +216,6 @@ public class ServerClass
 	public static void get(UserClass user, String filename) {
 
 		try {
-
 			// Find the file index
 			int fileIndex = -1;
 			for (int i = 0; i < fileList.size(); i++) {
