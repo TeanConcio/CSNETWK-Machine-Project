@@ -11,6 +11,7 @@ public class ClientClass {
 
         try {
             // Send name and command to server
+            //TODO : Please use '/?' to see the list of available functions.
             System.out.print("Enter a command: ");
 
             Scanner scanner = new Scanner(System.in);
@@ -29,7 +30,9 @@ public class ClientClass {
                 DataOutputStream dosWriter = new DataOutputStream(clientEndpoint.getOutputStream());
                 DataInputStream disReader = new DataInputStream(clientEndpoint.getInputStream());
                 String Name;
+                System.out.println("HELLO");
                 String Message = disReader.readUTF();
+                System.out.println(Message);
 
                 if (Message.equals("CONNECTION SUCCESSFUL")) {
                     while (Message.equals("USER HANDLE ALREADY TAKEN") || Message.equals("CONNECTION SUCCESSFUL")) {
@@ -40,6 +43,8 @@ public class ClientClass {
                             }
                         } else if (Message.equals("USER HANDLE ALREADY TAKEN")) {
                             System.out.println("That username is already taken! Please select another username...\n");
+                        } else if (Message.equals("NOT REGISTERED")) {
+                            System.out.println("This function is only available to registered users. Please register first.");
                         }
                     }
                 }
@@ -56,6 +61,7 @@ public class ClientClass {
     public static String registerUser (DataOutputStream dosWriter) {
         Scanner scanner = new Scanner(System.in);
 
+        System.out.print("Enter a command: ");
         String command = scanner.nextLine();
         String Name = command.split(" ")[1];
         try {
@@ -76,7 +82,30 @@ public class ClientClass {
         return command;
     }
 
-    public static void listenForReply(String Reply) {
-
+    public static void verifyReply(String Reply) {
+        switch (Reply) {
+            case "ALREADY CONNECTED":
+                System.out.println("User is already connected. ");
+                break;
+            case "INVALID FUNCTION":
+                System.out.println("Invalid function. Please use '/?' to see the list of available functions.");
+                break;
+            case "USER IS ALREADY REGISTERED":
+                System.out.println("User is already registered.");
+                break;
+            case "USER LEFT":
+                System.out.println("Connection terminated.");
+                return;
+            case "FILE STORED":
+                System.out.println("File stored successfully!");
+                break;
+            case "FILE SENT":
+                System.out.println("File received at " + "TODO : Directory");
+                break;
+            case "FILE NOT FOUND":
+                System.out.println("File not found.");
+                break;
+            default:
+        }
     }
 }
