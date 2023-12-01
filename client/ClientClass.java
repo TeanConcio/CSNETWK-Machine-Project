@@ -31,23 +31,32 @@ public class ClientClass {
                 DataInputStream disReader = new DataInputStream(clientEndpoint.getInputStream());
                 String Name;
                 System.out.println("HELLO");
-                String Message = disReader.readUTF();
-                System.out.println(Message);
 
-                if (Message.equals("CONNECTION SUCCESSFUL")) {
-                    while (Message.equals("USER HANDLE ALREADY TAKEN") || Message.equals("CONNECTION SUCCESSFUL")) {
+                if (disReader.readUTF().equals("CONNECTION SUCCESSFUL")) {
+                    System.out.println("Connection successful!");
+                    Name = registerUser (dosWriter);
+                    while (disReader.readUTF().equals("USER HANDLE ALREADY TAKEN") || disReader.readUTF().equals("NOT REGISTERED")) {
+                        
+                        System.out.println("HI");
+
                         Name = registerUser (dosWriter);
-                        if (Message.equals("USER HANDLE REGISTERED")) {
-                            while (true) {
-                                dosWriter.writeUTF(getInput(Name));
-                            }
-                        } else if (Message.equals("USER HANDLE ALREADY TAKEN")) {
-                            System.out.println("That username is already taken! Please select another username...\n");
-                        } else if (Message.equals("NOT REGISTERED")) {
+
+                        if (disReader.readUTF().equals("USER HANDLE REGISTERED")) {
+                            System.out.println("Registered successfully!");
+                            break;
+                        } else if (disReader.readUTF().equals("USER HANDLE ALREADY TAKEN")) {
+                            System.out.println("That username is already taken! Please select another username...");
+                        } else if (disReader.readUTF().equals("NOT REGISTERED")) {
                             System.out.println("This function is only available to registered users. Please register first.");
                         }
                     }
+
+                    while (true) {
+                        dosWriter.writeUTF(getInput(Name));
+                        verifyReply(disReader.readUTF());
+                    }
                 }
+
                 // Close connection
                 clientEndpoint.close();
             }
