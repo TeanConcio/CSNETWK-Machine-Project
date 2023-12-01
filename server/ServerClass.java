@@ -131,6 +131,8 @@ public class ServerClass
 	public static int getUserIndex(String userHandle) {
 
 		for (int i = 0; i < userList.size(); i++) {
+			if (userList.get(i).userHandle == null)
+				continue;
 			if (userList.get(i).userHandle.equals(userHandle)) {
 				return i;
 			}
