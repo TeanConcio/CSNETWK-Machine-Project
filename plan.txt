@@ -1,0 +1,91 @@
+Functions:
+
+    /join
+        description:
+            Client joins a server
+        parameters:
+            Server IP Address
+            Server Port Number
+        responses:
+            CONNECTION SUCCESSFUL
+            ERROR
+                
+
+    /register
+        description:
+            Client registers a name in the Server
+            Server checks if name is unique in list of connected users
+            Server adds name into list of connected users
+        parameters:
+            User Handle
+        sent data:
+            Client:
+                User Handle
+        responses:
+            REGISTRATION SUCCESSFUL
+            HANDLE NOT UNIQUE
+            ERROR
+
+    /store
+        description:
+            Client stores a file in the Server
+            Client gets file that is in the same directory and sends it to Server
+            Client sends filename and file data
+            Server stores filename, file data, user who sent
+        parameters:
+            Filename of file to receive
+        sent data:
+            Client:
+                Filename
+                File Data
+        responses:
+            FILE RECEIVED
+            ERROR
+
+    /dir
+        description:
+            Client asks for the files in the Server
+            Server sends list of filenames
+        parameters:
+            -
+        sent data:
+            Server:
+                List of filenames
+        responses:
+            list of filenames
+            ERROR
+
+    /get
+        description:
+            Client downloads a file from the Server
+            Server checks if filename exists in list of filenames
+            Server sends file data
+        parameters:
+            Filename of file to download
+        sent data:
+            Client:
+                filename
+            Server:
+                file data
+        responses:
+            ERROR
+
+    /leave
+        description:
+            Client leave from the Server
+            Server removes handle from list of connected users
+        parameters:
+            -
+        sent data:
+            Client:
+                User Handle
+        responses:
+            ERROR
+
+    /?
+        description:
+            Client lists possible commands into console
+        parameters:
+            -
+        responses:
+            ERROR???
