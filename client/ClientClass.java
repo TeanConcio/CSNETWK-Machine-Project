@@ -23,6 +23,7 @@ public class ClientClass {
             int nPort = Integer.parseInt(command[2]);
     
             if (mainCommand.equals("/join")) {
+
                 clientEndpoint = new Socket(ipAddress, nPort);
                 System.out.println(ipAddress + ": Connecting to server at " + clientEndpoint.getRemoteSocketAddress() + "\n");
     
@@ -30,30 +31,38 @@ public class ClientClass {
                 DataOutputStream dosWriter = new DataOutputStream(clientEndpoint.getOutputStream());
                 DataInputStream disReader = new DataInputStream(clientEndpoint.getInputStream());
                 String Name;
+                String Message = disReader.readUTF();
                 System.out.println("HELLO");
 
-                if (disReader.readUTF().equals("CONNECTION SUCCESSFUL")) {
+                if (Message.equals("CONNECTION SUCCESSFUL")) {
                     System.out.println("Connection successful!");
+
                     Name = registerUser (dosWriter);
-                    while (disReader.readUTF().equals("USER HANDLE ALREADY TAKEN") || disReader.readUTF().equals("NOT REGISTERED")) {
-                        
-                        System.out.println("HI");
+                    Message = disReader.readUTF();
 
-                        Name = registerUser (dosWriter);
+                    while (Message.equals("USER HANDLE ALREADY TAKEN") || 
+                            Message.equals("NOT REGISTERED") || 
+                            Message.equals("INVALID FUNCTION")) {
 
-                        if (disReader.readUTF().equals("USER HANDLE REGISTERED")) {
+                        if (Message.equals("USER HANDLE REGISTERED")) {
                             System.out.println("Registered successfully!");
                             break;
-                        } else if (disReader.readUTF().equals("USER HANDLE ALREADY TAKEN")) {
+                        } else if (Message.equals("USER HANDLE ALREADY TAKEN")) {
                             System.out.println("That username is already taken! Please select another username...");
-                        } else if (disReader.readUTF().equals("NOT REGISTERED")) {
+                        } else if (Message.equals("NOT REGISTERED")) {
                             System.out.println("This function is only available to registered users. Please register first.");
+                        } else if (Message.equals("INVALID FUNCTION")) {
+                            System.out.println("Invalid function. Please use '/?' to see the list of available functions.");
                         }
+                        
+                        Name = registerUser (dosWriter);
+                        Message = disReader.readUTF();
                     }
 
                     while (true) {
                         dosWriter.writeUTF(getInput(Name));
-                        verifyReply(disReader.readUTF());
+                        Message = disReader.readUTF();
+                        verifyReply(Message);
                     }
                 }
 
