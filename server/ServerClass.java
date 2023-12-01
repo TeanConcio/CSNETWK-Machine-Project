@@ -15,9 +15,9 @@ import java.io.*;
 public class ServerClass
 {
 	private static final int SERVER_PORT = 4000;
+	private static final String FILE_DIRECTORY = "files";
 
 	private static ArrayList<UserClass> userList = new ArrayList<UserClass>();
-	private static ArrayList<FileClass> fileList = new ArrayList<FileClass>();
 
 	public static void main(String[] args)
 	{
@@ -188,6 +188,8 @@ public class ServerClass
 			}
 			else {
 				user.userHandle = userHandle;
+
+				// Send Response
 				user.dosWriter.writeUTF("USER HANDLE REGISTERED");
 				System.out.printf("[%s] /register: USER HANDLE REGISTERED\n", user.userHandle);
 			}
@@ -204,6 +206,7 @@ public class ServerClass
 			// Remove user from list
 			userList.remove(user);
 
+			// Send Response
 			user.dosWriter.writeUTF("USER LEFT");
 			System.out.printf("[%s] /leave: USER LEFT\n", user.userHandle);
 		}
@@ -216,15 +219,20 @@ public class ServerClass
 	public static void dir(UserClass user) {
 
 		try {
-			// Send the number of files
-			user.dosWriter.writeInt(fileList.size());
+			// Get the list of filenames in the directory
+			String[] filenames = (new File(FILE_DIRECTORY)).list();
 
-			// Send the file names
-			for (int i = 0; i < fileList.size(); i++) {
-				user.dosWriter.writeUTF(fileList.get(i).filename);
+			// Send the number of files
+			user.dosWriter.writeInt(filenames.length);
+
+			// Send the filenames
+			for (int i = 0; i < filenames.length; i++) {
+				user.dosWriter.writeUTF(filenames[i]);
 			}
 
-			System.out.printf("[%s] /dir: %d FILENAMES SENT\n", user.userHandle, fileList.size());
+			// Send Response
+			user.dosWriter.writeUTF("DIRECTORY SENT");
+			System.out.printf("[%s] /dir: DIRECTORY SENT\n", user.userHandle);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -242,9 +250,16 @@ public class ServerClass
 			byte[] fileContentBytes = new byte[fileSize];
 			user.disReader.readFully(fileContentBytes, 0, fileSize);
 
-			// Add file to list
-			fileList.add(new FileClass(filename, fileContentBytes, fileSize, user.userHandle));
+			// Initialize File and FileOutputStream
+			File file = new File(filename);
+			FileOutputStream fileOutputStream = new FileOutputStream(file);
 
+			// Write the file using the byte array
+			fileOutputStream.write(fileContentBytes);
+
+			fileOutputStream.close();
+
+			// Send Response
 			user.dosWriter.writeUTF("FILE STORED");
 			System.out.printf("[%s] /store: FILE STORED\n", user.userHandle);
 		}
@@ -257,10 +272,13 @@ public class ServerClass
 	public static void get(UserClass user, String filename) {
 
 		try {
-			// Find the file index
+			// Get the list of filenames in the directory
+			String[] filenames = (new File(FILE_DIRECTORY)).list();
+
+			// Find the index of the file
 			int fileIndex = -1;
-			for (int i = 0; i < fileList.size(); i++) {
-				if (fileList.get(i).filename.equals(filename)) {
+			for (int i = 0; i < filenames.length; i++) {
+				if (filenames[i].equals(filename)) {
 					fileIndex = i;
 					break;
 				}
@@ -269,12 +287,21 @@ public class ServerClass
 			// Check if file exists
 			if (fileIndex != -1) {
 
-				// Send the file size
-				user.dosWriter.writeInt(fileList.get(fileIndex).length);
+				// Initialize File and FileInputStream
+				File file = new File(filename);
+				FileInputStream fileInputStream = new FileInputStream(file.getAbsolutePath());
 
-				// Send the file contents
-				user.dosWriter.write(fileList.get(fileIndex).data);
+				// Get File contents into byte array
+				byte[] fileContentBytes = new byte[(int) file.length()];
+				fileInputStream.read(fileContentBytes);
 
+				// Send the size of the byte array, then the actual byte array
+				user.dosWriter.writeInt(fileContentBytes.length);
+				user.dosWriter.write(fileContentBytes);
+
+				fileInputStream.close();
+
+				// Send Response
 				user.dosWriter.writeUTF("FILE SENT");
 				System.out.printf("[%s] /get: FILE SENT\n", user.userHandle);
 			}
