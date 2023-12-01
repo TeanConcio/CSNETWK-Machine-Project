@@ -32,6 +32,7 @@ public class ClientClass {
                 DataInputStream disReader = new DataInputStream(clientEndpoint.getInputStream());
                 String Name;
                 String Message = disReader.readUTF();
+                boolean Looper = true;
                 System.out.println("HELLO");
 
                 if (Message.equals("CONNECTION SUCCESSFUL")) {
@@ -42,7 +43,8 @@ public class ClientClass {
 
                     while (Message.equals("USER HANDLE ALREADY TAKEN") || 
                             Message.equals("NOT REGISTERED") || 
-                            Message.equals("INVALID FUNCTION")) {
+                            Message.equals("INVALID FUNCTION") || 
+                            Message.equals("ALREADY CONNECTED")) {
 
                         if (Message.equals("USER HANDLE REGISTERED")) {
                             System.out.println("Registered successfully!");
@@ -53,16 +55,18 @@ public class ClientClass {
                             System.out.println("This function is only available to registered users. Please register first.");
                         } else if (Message.equals("INVALID FUNCTION")) {
                             System.out.println("Invalid function. Please use '/?' to see the list of available functions.");
+                        } else if (Message.equals("ALREADY CONNECTED")) {
+                            System.out.println("User is already connected.");
                         }
                         
                         Name = registerUser (dosWriter);
                         Message = disReader.readUTF();
                     }
 
-                    while (true) {
+                    while (Looper) {
                         dosWriter.writeUTF(getInput(Name));
                         Message = disReader.readUTF();
-                        verifyReply(Message);
+                        Looper = verifyReply(Message);
                     }
                 }
 
@@ -80,8 +84,14 @@ public class ClientClass {
         Scanner scanner = new Scanner(System.in);
 
         System.out.print("Enter a command: ");
+
         String command = scanner.nextLine();
-        String Name = command.split(" ")[1];
+        String Name = "NULL";
+
+        if (command.split(" ").length > 1) {
+            Name = command.split(" ")[1];
+        }
+
         try {
             dosWriter.writeUTF(command);
         }
@@ -100,10 +110,10 @@ public class ClientClass {
         return command;
     }
 
-    public static void verifyReply(String Reply) {
+    public static boolean verifyReply(String Reply) {
         switch (Reply) {
             case "ALREADY CONNECTED":
-                System.out.println("User is already connected. ");
+                System.out.println("User is already connected.");
                 break;
             case "INVALID FUNCTION":
                 System.out.println("Invalid function. Please use '/?' to see the list of available functions.");
@@ -112,8 +122,7 @@ public class ClientClass {
                 System.out.println("User is already registered.");
                 break;
             case "USER LEFT":
-                System.out.println("Connection terminated.");
-                return;
+                return false;
             case "FILE STORED":
                 System.out.println("File stored successfully!");
                 break;
@@ -125,5 +134,7 @@ public class ClientClass {
                 break;
             default:
         }
+
+        return true;
     }
 }
