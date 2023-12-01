@@ -4,7 +4,7 @@ import java.io.*;
 
 public class UserClass {
     
-    public String userHandle;
+    public String userHandle = null;
     public DataInputStream disReader;
     public DataOutputStream dosWriter;
 
