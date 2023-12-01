@@ -17,8 +17,7 @@ public class ClientClass {
             // Send name and command to server
     
             if (commandJoin.equals("/join")) {
-                if (args.length == 5) {
-                    // Fetch file from server
+                if (args.length == 3) {
                     clientEndpoint = new Socket(ipAddress, nPort);
                     System.out.println(ipAddress + ": Connecting to server at\n" + clientEndpoint.getRemoteSocketAddress() + "\n");
     
@@ -26,10 +25,14 @@ public class ClientClass {
                     DataOutputStream dosWriter = new DataOutputStream(clientEndpoint.getOutputStream());
                     DataInputStream disReader = new DataInputStream(clientEndpoint.getInputStream());
 
+                    if (disReader.readUTF().equals("CONNECTION SUCCESSFUL")) {
+                        String Name = "Cring";
+                        getInput(Name);
+                    }
                     // Close connection
                     clientEndpoint.close();
                 } else {
-                    System.out.println("Usage: /get [file_path]");
+                    System.out.println("Usage: /join [ip_address] [port_number]");
                 }// Connect to server
     
                 // Receive message from server
@@ -39,6 +42,18 @@ public class ClientClass {
             e.printStackTrace();
         } finally {
             System.out.println("Connection terminated" + "\n");
+        }
+    }
+
+    public static void getInput(String Name) {
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            System.out.print(Name + ": Enter command: ");
+            String command = scanner.nextLine();
+
+            if (command.equals ("/leave")) {
+                return;
+            }
         }
     }
 }
