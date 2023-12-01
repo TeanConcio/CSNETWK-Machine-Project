@@ -85,6 +85,12 @@ public class ServerClass
 					return true;
 
 				case "/register":
+					if (input.length != 2) {
+						user.dosWriter.writeUTF("INVALID NUMBER OF ARGUMENTS");
+						if (user.userHandle == null) System.out.printf("[%s] /register: INVALID NUMBER OF ARGUMENTS\n", "Unknown");
+						else System.out.printf("[%s] /register: INVALID NUMBER OF ARGUMENTS\n", user.userHandle);
+						return true;
+					}
 					register(user, input[1]);
 					return true;
 
@@ -109,14 +115,24 @@ public class ServerClass
 						else System.out.printf("[%s] /store: NOT REGISTERED\n", user.userHandle);
 						return true;
 					}
+					if (input.length != 2) {
+						user.dosWriter.writeUTF("INVALID NUMBER OF ARGUMENTS");
+						System.out.printf("[%s] /store: INVALID NUMBER OF ARGUMENTS\n", user.userHandle);
+						return true;
+					}
 					store(user, input[1]);
 					return true;
 
 				case "/get":
 					if (user.userHandle == null) {
 						user.dosWriter.writeUTF("NOT REGISTERED");
-						if (user.userHandle == null) System.out.printf("[%s] /get: NOT REGISTERED\n", "Unknown");
-						else System.out.printf("[%s] /get: NOT REGISTERED\n", user.userHandle);
+						System.out.printf("[%s] /get: NOT REGISTERED\n", user.userHandle);
+						return true;
+					}
+					if (input.length != 2) {
+						user.dosWriter.writeUTF("INVALID NUMBER OF ARGUMENTS");
+						if (user.userHandle == null) System.out.printf("[%s] /get: INVALID NUMBER OF ARGUMENTS\n", "Unknown");
+						else System.out.printf("[%s] /get: INVALID NUMBER OF ARGUMENTS\n", user.userHandle);
 						return true;
 					}
 					get(user, input[1]);
