@@ -76,9 +76,6 @@ Functions:
             Server removes handle from list of connected users
         parameters:
             -
-        sent data:
-            Client:
-                User Handle
         responses:
             ERROR
 

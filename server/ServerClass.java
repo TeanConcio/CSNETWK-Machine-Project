@@ -9,6 +9,7 @@
 package server;
 
 import java.net.*;
+import java.util.ArrayList;
 import java.io.*;
 
 import server.UserClass;
@@ -17,10 +18,9 @@ import server.FileClass;
 public class ServerClass
 {
 	private static final int SERVER_PORT = 4000;
-	private static final String SERVER_ADDRESS = "127.0.0.1";
 
-	private static UserClass userList[] = new UserClass[10];
-	private static FileClass fileList[] = new FileClass[10];
+	private static ArrayList<UserClass> userList = new ArrayList<UserClass>();
+	private static ArrayList<FileClass> fileList = new ArrayList<FileClass>();
 
 	public static void main(String[] args)
 	{
@@ -28,19 +28,26 @@ public class ServerClass
 
 		// Loop to accept multiple clients
 		while (true) {
-			try 
-			{
+			try {
+
 				// Initialize ServerSocket and Socket and accept connection
 				ServerSocket serverSocket = new ServerSocket(SERVER_PORT);
 				Socket serverEndpoint = serverSocket.accept();
 				System.out.println("Server: New client connected: " + serverEndpoint.getRemoteSocketAddress());
 				
-				// 
+				// Initialize user
+				UserClass user = new UserClass(
+					new DataInputStream(serverEndpoint.getInputStream()), 
+					new DataOutputStream(serverEndpoint.getOutputStream()));
+
+				// Add user to list
+				userList.add(user);
 
 				// Reply to client
-				dosWriter.writeUTF("CONNECTION SUCCESSFUL");
+				user.dosWriter.writeUTF("CONNECTION SUCCESSFUL");
 
 				// Receive the function to be performed
+				while (decideFunction(user)){}
 
 				serverEndpoint.close();
 			}
@@ -56,157 +63,167 @@ public class ServerClass
 	}
 
 
-	public static void decideFunction(DataInputStream disReader, DataOutputStream dosWriter) {
+	public static boolean decideFunction(UserClass user) {
 
 		try {
 
 			// Receive the function to be performed
-			String function = disReader.readUTF();
+			String function = user.disReader.readUTF();
 
 			// Decide which function to perform
 			switch (function) {
-				case "register":
-
-					break;
-				case "dir":
-
-					break;
-				case "store":
-
-					break;
-				case "get":
-
-					break;
-				case "leave":
-
-					break;
+				case "/register":
+					register(user);
+					return true;
+				case "/leave":
+					leave(user);
+					return false;
+				case "/dir":
+					dir(user);
+					return true;
+				case "/store":
+					store(user);
+					return true;
+				case "/get":
+					get(user);
+					return true;
 				default:
-					dosWriter.writeUTF("INVALID FUNCTION");
-					break;
+					user.dosWriter.writeUTF("INVALID FUNCTION");
+					return true;
 			}
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
+		return true;
 	}
 
 
-	public static boolean checkUserHandle(String userHandle) {
+	public static int getUserIndex(String userHandle) {
 
-		for (int i = 0; i < userHandleList.length; i++) {
-			if (userHandleList[i] == userHandle) {
-				return true;
+		for (int i = 0; i < userList.size(); i++) {
+			if (userList.get(i).userHandle.equals(userHandle)) {
+				return i;
 			}
 		}
 
-		return false;
+		return -1;
 	}
 
 
-	public static void register(DataInputStream disReader, DataOutputStream dosWriter) {
+	public static void register(UserClass user) {
 
 		try {
 
 			// Receive the user handle
-			String userHandle = disReader.readUTF();
+			String userHandle = user.disReader.readUTF();
 
 			// Check if user handle is already taken
-			if (checkUserHandle(userHandle)) {
-				dosWriter.writeUTF("USER HANDLE ALREADY TAKEN");
+			if (user.userHandle != null) {
+				user.dosWriter.writeUTF("USER HANDLE ALREADY REGISTERED");
+			}
+			else if (getUserIndex(userHandle) != -1) {
+				user.dosWriter.writeUTF("USER HANDLE ALREADY TAKEN");
 			}
 			else {
-				// Add user handle to list
-				for (int i = 0; i < userHandleList.length; i++) {
-					if (userHandleList[i] == null) {
-						userHandleList[i] = userHandle;
-						break;
-					}
-				}
-
-				dosWriter.writeUTF("USER HANDLE REGISTERED");
+				user.userHandle = userHandle;
+				user.dosWriter.writeUTF("USER HANDLE REGISTERED");
 			}
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-			dosWriter.writeUTF("ERROR: " + e.getMessage());
 		}
 	}
 
 
-	public static void dir(DataInputStream disReader, DataOutputStream dosWriter) {
+	public static void leave(UserClass user) {
+
+		try {
+
+			// Remove user from list
+			userList.remove(user);
+
+			user.dosWriter.writeUTF("USER LEFT");
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+
+	public static void dir(UserClass user) {
 
 		try {
 
 			// Send the number of files
-			dosWriter.writeInt(fileList.length);
+			user.dosWriter.writeInt(fileList.size());
 
 			// Send the file names
-			for (int i = 0; i < fileList.length; i++) {
-				dosWriter.writeUTF(fileList[i].filename);
+			for (int i = 0; i < fileList.size(); i++) {
+				user.dosWriter.writeUTF(fileList.get(i).filename);
 			}
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-			dosWriter.writeUTF("ERROR: " + e.getMessage());
 		}
 	}
 
 
-	public static void store(DataInputStream disReader, DataOutputStream dosWriter) {
+	public static void store(UserClass user) {
 
 		try {
 
 			// Receive the file name
-			String filename = disReader.readUTF();
+			String filename = user.disReader.readUTF();
 
 			// Receive the file size
-			int fileSize = disReader.readInt();
+			int fileSize = user.disReader.readInt();
 
 			// Receive the file contents
 			byte[] fileContentBytes = new byte[fileSize];
-			disReader.readFully(fileContentBytes, 0, fileSize);
+			user.disReader.readFully(fileContentBytes, 0, fileSize);
 
 			// Add file to list
-			for (int i = 0; i < fileList.length; i++) {
-				if (fileList[i] == null) {
-					fileList[i] = new FileClass(filename, fileContentBytes, fileSize, null);
-					break;
-				}
-			}
+			fileList.add(new FileClass(filename, fileContentBytes, fileSize, user.userHandle));
 
-			dosWriter.writeUTF("FILE STORED");
+			user.dosWriter.writeUTF("FILE STORED");
 		}
 		catch (Exception e) {
 			e.printStackTrace();
-			dosWriter.writeUTF("ERROR: " + e.getMessage());
 		}
 	}
 
 
-
-	public static void sendFile(DataInputStream disReader, DataOutputStream dosWriter) {
+	public static void get(UserClass user) {
 
 		try {
 
-			// Declare File and FileInputStream
-			String filename = "Download.txt";
-			File file = new File(filename);
-			FileInputStream fileInputStream = new FileInputStream(file.getAbsolutePath());
+			// Receive the file name
+			String filename = user.disReader.readUTF();
 
-			// Sending File Prompt
-			String sendingFilePrompt = String.format("Server: Sending file \"%s\" (%d bytes)", filename, (int)file.length());
-			System.out.println(sendingFilePrompt);
+			// Find the file index
+			int fileIndex = -1;
+			for (int i = 0; i < fileList.size(); i++) {
+				if (fileList.get(i).filename.equals(filename)) {
+					fileIndex = i;
+					break;
+				}
+			}
 
-			// Get File contents into byte array
-			byte[] fileContentBytes = new byte[(int) file.length()];
-			fileInputStream.read(fileContentBytes);
+			// Check if file exists
+			if (fileIndex != -1) {
 
-			// Send the size of the byte array, then the actual byte array
-			dosWriter.writeInt(fileContentBytes.length);
-			dosWriter.write(fileContentBytes);
+				// Send the file size
+				user.dosWriter.writeInt(fileList.get(fileIndex).length);
 
-			fileInputStream.close();
-			
+				// Send the file contents
+				user.dosWriter.write(fileList.get(fileIndex).data);
+
+				user.dosWriter.writeUTF("FILE SENT");
+			}
+			else {
+				user.dosWriter.writeUTF("FILE NOT FOUND");
+			}
 		}
 		catch (Exception e) {
 			e.printStackTrace();
