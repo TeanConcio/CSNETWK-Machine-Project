@@ -68,24 +68,36 @@ public class ServerClass
 		try {
 
 			// Receive the function to be performed
-			String function = user.disReader.readUTF();
+			String input[] = user.disReader.readUTF().split(" ");
 
 			// Decide which function to perform
-			switch (function) {
+			switch (input[0]) {
 				case "/register":
-					register(user);
+					register(user, input[1]);
 					return true;
 				case "/leave":
 					leave(user);
 					return false;
 				case "/dir":
+					if (user.userHandle == null) {
+						user.dosWriter.writeUTF("NOT REGISTERED");
+						return true;
+					}
 					dir(user);
 					return true;
 				case "/store":
-					store(user);
+					if (user.userHandle == null) {
+						user.dosWriter.writeUTF("NOT REGISTERED");
+						return true;
+					}
+					store(user, input[1]);
 					return true;
 				case "/get":
-					get(user);
+					if (user.userHandle == null) {
+						user.dosWriter.writeUTF("NOT REGISTERED");
+						return true;
+					}
+					get(user, input[1]);
 					return true;
 				default:
 					user.dosWriter.writeUTF("INVALID FUNCTION");
@@ -111,12 +123,9 @@ public class ServerClass
 	}
 
 
-	public static void register(UserClass user) {
+	public static void register(UserClass user, String userHandle) {
 
 		try {
-
-			// Receive the user handle
-			String userHandle = user.disReader.readUTF();
 
 			// Check if user handle is already taken
 			if (user.userHandle != null) {
@@ -169,12 +178,9 @@ public class ServerClass
 	}
 
 
-	public static void store(UserClass user) {
+	public static void store(UserClass user, String filename) {
 
 		try {
-
-			// Receive the file name
-			String filename = user.disReader.readUTF();
 
 			// Receive the file size
 			int fileSize = user.disReader.readInt();
@@ -194,12 +200,9 @@ public class ServerClass
 	}
 
 
-	public static void get(UserClass user) {
+	public static void get(UserClass user, String filename) {
 
 		try {
-
-			// Receive the file name
-			String filename = user.disReader.readUTF();
 
 			// Find the file index
 			int fileIndex = -1;
