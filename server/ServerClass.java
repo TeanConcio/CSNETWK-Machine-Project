@@ -12,9 +12,6 @@ import java.net.*;
 import java.util.ArrayList;
 import java.io.*;
 
-import server.UserClass;
-import server.FileClass;
-
 public class ServerClass
 {
 	private static final int SERVER_PORT = 4000;
@@ -48,6 +45,7 @@ public class ServerClass
 
 				// Reply to client
 				user.dosWriter.writeUTF("CONNECTION SUCCESSFUL");
+				System.out.printf("[%s] CONNECTION SUCCESSFUL\n", "Unknown");
 
 				// Receive the function to be performed
 				while (decideFunction(user)){}
@@ -82,6 +80,8 @@ public class ServerClass
 
 				case "/join":
 					user.dosWriter.writeUTF("ALREADY CONNECTED");
+					if (user.userHandle == null) System.out.printf("[%s] /join: ALREADY CONNECTED\n", "Unknown");
+					else System.out.printf("[%s] /join: ALREADY CONNECTED\n", user.userHandle);
 					return true;
 
 				case "/register":
@@ -95,6 +95,8 @@ public class ServerClass
 				case "/dir":
 					if (user.userHandle == null) {
 						user.dosWriter.writeUTF("NOT REGISTERED");
+						if (user.userHandle == null) System.out.printf("[%s] /dir: NOT REGISTERED\n", "Unknown");
+						else System.out.printf("[%s] /dir: NOT REGISTERED\n", user.userHandle);
 						return true;
 					}
 					dir(user);
@@ -103,6 +105,8 @@ public class ServerClass
 				case "/store":
 					if (user.userHandle == null) {
 						user.dosWriter.writeUTF("NOT REGISTERED");
+						if (user.userHandle == null) System.out.printf("[%s] /store: NOT REGISTERED\n", "Unknown");
+						else System.out.printf("[%s] /store: NOT REGISTERED\n", user.userHandle);
 						return true;
 					}
 					store(user, input[1]);
@@ -111,6 +115,8 @@ public class ServerClass
 				case "/get":
 					if (user.userHandle == null) {
 						user.dosWriter.writeUTF("NOT REGISTERED");
+						if (user.userHandle == null) System.out.printf("[%s] /get: NOT REGISTERED\n", "Unknown");
+						else System.out.printf("[%s] /get: NOT REGISTERED\n", user.userHandle);
 						return true;
 					}
 					get(user, input[1]);
@@ -118,6 +124,8 @@ public class ServerClass
 
 				default:
 					user.dosWriter.writeUTF("INVALID FUNCTION");
+					if (user.userHandle == null) System.out.printf("[%s] INVALID FUNCTION\n", "Unknown");
+					else System.out.printf("[%s] INVALID FUNCTION\n", user.userHandle);
 					return true;
 			}
 		}
@@ -148,13 +156,16 @@ public class ServerClass
 			// Check if user handle is already taken
 			if (user.userHandle != null) {
 				user.dosWriter.writeUTF("USER IS ALREADY REGISTERED");
+				System.out.printf("[%s] /register: USER IS ALREADY REGISTERED\n", user.userHandle);
 			}
 			else if (getUserIndex(userHandle) != -1) {
 				user.dosWriter.writeUTF("USER HANDLE ALREADY TAKEN");
+				System.out.printf("[%s] /register: USER HANDLE ALREADY TAKEN\n", "Unknown");
 			}
 			else {
 				user.userHandle = userHandle;
 				user.dosWriter.writeUTF("USER HANDLE REGISTERED");
+				System.out.printf("[%s] /register: USER HANDLE REGISTERED\n", user.userHandle);
 			}
 		}
 		catch (Exception e) {
@@ -170,6 +181,7 @@ public class ServerClass
 			userList.remove(user);
 
 			user.dosWriter.writeUTF("USER LEFT");
+			System.out.printf("[%s] /leave: USER LEFT\n", user.userHandle);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -187,6 +199,8 @@ public class ServerClass
 			for (int i = 0; i < fileList.size(); i++) {
 				user.dosWriter.writeUTF(fileList.get(i).filename);
 			}
+
+			System.out.printf("[%s] /dir: %d FILENAMES SENT\n", user.userHandle, fileList.size());
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -208,6 +222,7 @@ public class ServerClass
 			fileList.add(new FileClass(filename, fileContentBytes, fileSize, user.userHandle));
 
 			user.dosWriter.writeUTF("FILE STORED");
+			System.out.printf("[%s] /store: FILE STORED\n", user.userHandle);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -237,9 +252,11 @@ public class ServerClass
 				user.dosWriter.write(fileList.get(fileIndex).data);
 
 				user.dosWriter.writeUTF("FILE SENT");
+				System.out.printf("[%s] /get: FILE SENT\n", user.userHandle);
 			}
 			else {
 				user.dosWriter.writeUTF("FILE NOT FOUND");
+				System.out.printf("[%s] /get: FILE NOT FOUND\n", user.userHandle);
 			}
 		}
 		catch (Exception e) {
