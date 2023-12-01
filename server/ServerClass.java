@@ -48,7 +48,7 @@ public class ServerClass
 				System.out.printf("[%s] CONNECTION SUCCESSFUL\n", "Unknown");
 
 				// Receive the function to be performed
-				while (decideFunction(user)){}
+				while (decideFunction(serverEndpoint, user)){}
 
 				serverEndpoint.close();
 			}
@@ -69,7 +69,7 @@ public class ServerClass
 	}
 
 
-	public static boolean decideFunction(UserClass user) {
+	public static boolean decideFunction(Socket serverEndpoint, UserClass user) {
 
 		try {
 			// Receive the function to be performed
@@ -129,10 +129,20 @@ public class ServerClass
 					return true;
 			}
 		}
-		catch (Exception e) {
+		catch (SocketException e) {
+			if (user.userHandle == null) System.out.printf("Server: Client %s disconnected\n", "Unknown");
+			else System.out.printf("Server: Client %s disconnected\n", user.userHandle);
+			userList.remove(user);
+			try {
+				serverEndpoint.close();
+			} catch (IOException ioException) {
+				ioException.printStackTrace();
+			}
+			return false;
+		} catch (IOException e) {
 			e.printStackTrace();
+			return false;
 		}
-		return true;
 	}
 
 
