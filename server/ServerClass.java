@@ -150,7 +150,7 @@ public class ServerClass
 
 		for (int i = 0; i < userList.size(); i++) {
 			if (userList.get(i).userHandle == null)
-				continue;
+				break;
 			if (userList.get(i).userHandle.equals(userHandle)) {
 				return i;
 			}
