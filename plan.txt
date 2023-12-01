@@ -22,8 +22,8 @@ Functions:
             Client:
                 User Handle
         responses:
-            REGISTRATION SUCCESSFUL
-            HANDLE NOT UNIQUE
+            USER HANDLE REGISTERED
+            USER HANDLE ALREADY TAKEN
             ERROR
 
     /store
