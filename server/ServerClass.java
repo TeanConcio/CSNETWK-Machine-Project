@@ -73,19 +73,19 @@ public class ServerClass
 			// Decide which function to perform
 			switch (function) {
 				case "register":
-					
+					register(user);
 					return true;
 				case "leave":
-
+					leave(user);
 					return false;
 				case "dir":
-
+					dir(user);
 					return true;
 				case "store":
-
+					store(user);
 					return true;
 				case "get":
-
+					get(user);
 					return true;
 				default:
 					user.dosWriter.writeUTF("INVALID FUNCTION");
