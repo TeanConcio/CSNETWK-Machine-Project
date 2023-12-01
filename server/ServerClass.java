@@ -145,7 +145,7 @@ public class ServerClass
 		try {
 			// Check if user handle is already taken
 			if (user.userHandle != null) {
-				user.dosWriter.writeUTF("USER HANDLE ALREADY REGISTERED");
+				user.dosWriter.writeUTF("USER IS ALREADY REGISTERED");
 			}
 			else if (getUserIndex(userHandle) != -1) {
 				user.dosWriter.writeUTF("USER HANDLE ALREADY TAKEN");
