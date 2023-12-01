@@ -49,7 +49,7 @@ public class ServerClass
 				// Receive the function to be performed
 				while (decideFunction(user)){}
 
-				serverEndpoint.close();
+				serverSocket.close();
 			}
 			catch (Exception e)
 			{
