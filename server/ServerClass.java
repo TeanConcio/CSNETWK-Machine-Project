@@ -72,19 +72,19 @@ public class ServerClass
 
 			// Decide which function to perform
 			switch (function) {
-				case "register":
+				case "/register":
 					register(user);
 					return true;
-				case "leave":
+				case "/leave":
 					leave(user);
 					return false;
-				case "dir":
+				case "/dir":
 					dir(user);
 					return true;
-				case "store":
+				case "/store":
 					store(user);
 					return true;
-				case "get":
+				case "/get":
 					get(user);
 					return true;
 				default:
