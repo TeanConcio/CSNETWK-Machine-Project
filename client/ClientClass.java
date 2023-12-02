@@ -1,10 +1,16 @@
 package client;
 
 import java.util.Scanner;
+
+import server.UserClass;
+
 import java.net.*;
 import java.io.*;
 
 public class ClientClass {
+    
+    private static final String FILE_DIRECTORY = "files";
+
     public static void main(String[] args) {
 
         Socket clientEndpoint;
@@ -30,8 +36,12 @@ public class ClientClass {
                 // Initialize input and output streams
                 DataOutputStream dosWriter = new DataOutputStream(clientEndpoint.getOutputStream());
                 DataInputStream disReader = new DataInputStream(clientEndpoint.getInputStream());
+                
                 String Name;
+                String fullCommand;
+                String Command;
                 String Message = disReader.readUTF();
+
                 boolean Looper = true;
                 System.out.println("HELLO");
 
@@ -64,9 +74,20 @@ public class ClientClass {
                     }
 
                     while (Looper) {
-                        dosWriter.writeUTF(getInput(Name));
+                        fullCommand = getInput(Name);
+                        dosWriter.writeUTF(getInput(fullCommand));
+                        Command = fullCommand.split(" ")[0];
+
+                        if (Command.equals("/get")) {
+
+                        }
+                        else if (Command.equals("/store")) {
+                            String fileName = fullCommand.split(" ")[1];
+                            sendFile (disReader, dosWriter, fileName);
+                        }
+
                         Message = disReader.readUTF();
-                        Looper = verifyReply(Message);
+                        Looper = verifyReply(Message, Name);
                     }
                 }
 
@@ -110,31 +131,105 @@ public class ClientClass {
         return command;
     }
 
-    public static boolean verifyReply(String Reply) {
+    public static boolean verifyReply(String Reply, String Name) {
         switch (Reply) {
             case "ALREADY CONNECTED":
-                System.out.println("User is already connected.");
+                System.out.println("[" + Name + "] User is already connected.");
                 break;
             case "INVALID FUNCTION":
-                System.out.println("Invalid function. Please use '/?' to see the list of available functions.");
+                System.out.println("[" + Name + "] Invalid function. Please use '/?' to see the list of available functions.");
                 break;
             case "USER IS ALREADY REGISTERED":
-                System.out.println("User is already registered.");
+                System.out.println("[" + Name + "] User is already registered.");
                 break;
             case "USER LEFT":
                 return false;
             case "FILE STORED":
-                System.out.println("File stored successfully!");
+                System.out.println("[" + Name + "] File stored successfully!");
                 break;
             case "FILE SENT":
-                System.out.println("File received at " + "TODO : Directory");
+                System.out.println("[" + Name + "] File received at " + "TODO : Directory");
                 break;
             case "FILE NOT FOUND":
-                System.out.println("File not found.");
+                System.out.println("[" + Name + "] File not found.");
                 break;
             default:
         }
 
         return true;
     }
+
+    public static void get(DataInputStream disReader, DataOutputStream dosWriter, String filename) {
+
+		try {
+			// Receive the file size
+			int fileSize = disReader.readInt();
+
+			// Receive the file contents
+			byte[] fileContentBytes = new byte[fileSize];
+			disReader.readFully(fileContentBytes, 0, fileSize);
+
+			// Initialize File and FileOutputStream
+			File file = new File(filename);
+			FileOutputStream fileOutputStream = new FileOutputStream(file);
+
+			// Write the file using the byte array
+			fileOutputStream.write(fileContentBytes);
+
+			fileOutputStream.close();
+
+			// Send Response
+			System.out.printf("FILE STORED\n");
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+
+	public static void sendFile (DataInputStream disReader, DataOutputStream dosWriter, String filename) {
+
+		try {
+			// Get the list of filenames in the directory
+			String[] filenames = (new File(FILE_DIRECTORY)).list();
+            
+			// Find the index of the file
+			int fileIndex = -1;
+			for (int i = 0; i < filenames.length; i++) {
+				if (filenames[i].equals(filename)) {
+					fileIndex = i;
+					break;
+				}
+			}
+
+			// Check if file exists
+			if (fileIndex != -1) {
+
+				// Initialize File and FileInputStream
+				File file = new File(FILE_DIRECTORY + "/" + filename);
+				FileInputStream fileInputStream = new FileInputStream(file.getAbsolutePath());
+
+				// Get File contents into byte array
+				byte[] fileContentBytes = new byte[(int) file.length()];
+				fileInputStream.read(fileContentBytes);
+
+				// Send the size of the byte array, then the actual byte array
+				dosWriter.writeInt(fileContentBytes.length);
+				dosWriter.write(fileContentBytes);
+
+				fileInputStream.close();
+
+				// Send Response
+				dosWriter.writeUTF("FILE SENT");
+				System.out.printf("/get: FILE SENT\n");
+			}
+			else {
+				dosWriter.writeUTF("FILE NOT FOUND");
+				System.out.printf("/get: FILE NOT FOUND\n");
+			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 }
