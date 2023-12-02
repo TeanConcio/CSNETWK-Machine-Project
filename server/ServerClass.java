@@ -248,9 +248,7 @@ public class ServerClass {
 			// Send the filenames
 			user.dosWriter.writeUTF(filenames);
 
-			// Send Response
-			user.dosWriter.writeUTF("DIRECTORY SENT");
-			logUserAction(user, "/dir: DIRECTORY SENT");
+			logUserAction(user, "/dir: " + filenames);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
