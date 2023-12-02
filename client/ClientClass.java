@@ -87,7 +87,9 @@ public class ClientClass {
                             sendFile (disReader, dosWriter, fileName);
                         }
                         else if (Command.equals("/dir")) {
-                            System.out.println(disReader.readUTF());
+                            System.out.println("Hi");
+                            String Directories = disReader.readUTF();
+                            System.out.println(Directories);
                         }
 
                         Message = disReader.readUTF();
