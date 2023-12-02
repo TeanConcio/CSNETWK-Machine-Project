@@ -77,6 +77,7 @@ public class ClientClass {
                     while (Looper) {
                         fullCommand = getInput(Name);
                         dosWriter.writeUTF(fullCommand);
+                        System.out.println(fullCommand);
                         Command = fullCommand.split(" ")[0];
 
                         if (Command.equals("/get")) {
@@ -199,11 +200,6 @@ public class ClientClass {
 			// Get the list of filenames in the directory
             String[] filenames = (new File(FILE_DIRECTORY)).list();
             System.out.println(filenames[0]);
-
-            if (filenames == null) {
-                System.out.println("No files found in the directory: " + FILE_DIRECTORY);
-                return;
-            }
             
 			// Find the index of the file
 			int fileIndex = -1;
@@ -238,11 +234,9 @@ public class ClientClass {
 				fileInputStream.close();
 
 				// Send Response
-				dosWriter.writeUTF("FILE SENT");
 				System.out.printf("/store: FILE SENT\n");
 			}
 			else {
-				dosWriter.writeUTF("FILE NOT FOUND");
 				System.out.printf("/store: FILE NOT FOUND\n");
 			}
 		}
