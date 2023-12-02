@@ -161,6 +161,11 @@ public class ServerClass {
 					}
 					get(user, parameters);
 					return true;
+				
+				case "/?":
+					user.dosWriter.writeUTF("DISPLAY COMMANDS");
+					logUserAction(user, "/?: DISPLAY COMMANDS");
+					return true;
 
 				default:
 					user.dosWriter.writeUTF("INVALID FUNCTION");
