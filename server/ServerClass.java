@@ -237,15 +237,16 @@ public class ServerClass {
 
 		try {
 			// Get the list of filenames in the directory
-			String[] filenames = (new File(FILE_DIRECTORY)).list();
-
-			// Send the number of files
-			user.dosWriter.writeInt(filenames.length);
+			String[] filenamesList = (new File(FILE_DIRECTORY)).list();
+			
+			// Merge the filenames into a single string
+			String filenames = "";
+			for (int i = 0; i < filenamesList.length; i++) {
+				filenames += filenamesList[i] + "\n";
+			}
 
 			// Send the filenames
-			for (int i = 0; i < filenames.length; i++) {
-				user.dosWriter.writeUTF(filenames[i]);
-			}
+			user.dosWriter.writeUTF(filenames);
 
 			// Send Response
 			user.dosWriter.writeUTF("DIRECTORY SENT");
