@@ -102,10 +102,10 @@ public class ServerClass {
 			if (user.userHandle == null) {
 				user.dosWriter.writeUTF("NOT REGISTERED");
 				logUserAction(user, "/dir: NOT REGISTERED");
-				return false;
+				return true;
 			}
 			else
-				return true;
+				return false;
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -118,10 +118,15 @@ public class ServerClass {
 
 		try {
 			// Receive the function to be performed
-			String input[] = user.disReader.readUTF().split(" ");
+			String input = user.disReader.readUTF().trim();
+			logUserAction(user, input);
+			
+			// Split the input into command and parameter
+			String command = input.split(" ")[0];
+			String parameters = input.split(command, 2)[1].trim();
 
 			// Decide which function to perform
-			switch (input[0]) {
+			switch (command) {
 
 				case "/join":
 					user.dosWriter.writeUTF("ALREADY CONNECTED");
@@ -129,7 +134,7 @@ public class ServerClass {
 					return true;
 
 				case "/register":
-					register(user, input[1]);
+					register(user, parameters);
 					return true;
 
 				case "/leave":
@@ -147,19 +152,19 @@ public class ServerClass {
 					if (checkUserNotRegistered(user)) {
 						return true;
 					}
-					store(user, input[1]);
+					store(user, parameters);
 					return true;
 
 				case "/get":
 					if (checkUserNotRegistered(user)) {
 						return true;
 					}
-					get(user, input[1]);
+					get(user, parameters);
 					return true;
 
 				default:
 					user.dosWriter.writeUTF("INVALID FUNCTION");
-					logUserAction(user, input[0] + ": INVALID FUNCTION");
+					logUserAction(user, command + ": INVALID FUNCTION");
 					return true;
 			}
 		}
