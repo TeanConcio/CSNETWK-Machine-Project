@@ -243,18 +243,27 @@ public class ServerClass {
 		try {
 			// Get the list of filenames in the directory
 			String[] filenamesList = (new File(FILE_DIRECTORY)).list();
-			
-			// Merge the filenames into a single string
-			String filenames = "";
-			for (int i = 0; i < filenamesList.length; i++) {
-				filenames += filenamesList[i] + "\n";
+
+			if (filenamesList.length == 0) {
+				user.dosWriter.writeUTF("");
+
+				user.dosWriter.writeUTF("DIRECTORY EMPTY");
+				logUserAction(user, "/dir: DIRECTORY EMPTY");
 			}
+			else {
+				// Merge the filenames into a single string
+				String filenames = "";
+				for (int i = 0; i < filenamesList.length - 1; i++) {
+					filenames += filenamesList[i] + "\n";
+				}
+				filenames += filenamesList[filenamesList.length - 1];
 
-			// Send the filenames
-			user.dosWriter.writeUTF(filenames);
+				// Send the filenames
+				user.dosWriter.writeUTF(filenames);
 
-			user.dosWriter.writeUTF("DIRECTORY SENT");
+				user.dosWriter.writeUTF("DIRECTORY SENT");
 			logUserAction(user, "/dir: " + filenames);
+			}
 		}
 		catch (Exception e) {
 			e.printStackTrace();
