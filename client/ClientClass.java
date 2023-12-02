@@ -9,7 +9,7 @@ import java.io.*;
 
 public class ClientClass {
     
-    private static final String FILE_DIRECTORY = "files";
+    private static final String FILE_DIRECTORY = System.getProperty("user.dir") + "\\client\\files\\";
 
     public static void main(String[] args) {
 
@@ -36,7 +36,7 @@ public class ClientClass {
                 // Initialize input and output streams
                 DataOutputStream dosWriter = new DataOutputStream(clientEndpoint.getOutputStream());
                 DataInputStream disReader = new DataInputStream(clientEndpoint.getInputStream());
-                
+
                 String Name;
                 String fullCommand;
                 String Command;
@@ -75,7 +75,7 @@ public class ClientClass {
 
                     while (Looper) {
                         fullCommand = getInput(Name);
-                        dosWriter.writeUTF(getInput(fullCommand));
+                        dosWriter.writeUTF(fullCommand);
                         Command = fullCommand.split(" ")[0];
 
                         if (Command.equals("/get")) {
@@ -191,7 +191,13 @@ public class ClientClass {
 
 		try {
 			// Get the list of filenames in the directory
-			String[] filenames = (new File(FILE_DIRECTORY)).list();
+            String[] filenames = (new File(FILE_DIRECTORY)).list();
+            System.out.println(filenames[0]);
+
+            if (filenames == null) {
+                System.out.println("No files found in the directory: " + FILE_DIRECTORY);
+                return;
+            }
             
 			// Find the index of the file
 			int fileIndex = -1;
@@ -206,7 +212,7 @@ public class ClientClass {
 			if (fileIndex != -1) {
 
 				// Initialize File and FileInputStream
-				File file = new File(FILE_DIRECTORY + "/" + filename);
+				File file = new File(FILE_DIRECTORY + filename);
 				FileInputStream fileInputStream = new FileInputStream(file.getAbsolutePath());
 
 				// Get File contents into byte array
@@ -221,11 +227,11 @@ public class ClientClass {
 
 				// Send Response
 				dosWriter.writeUTF("FILE SENT");
-				System.out.printf("/get: FILE SENT\n");
+				System.out.printf("/store: FILE SENT\n");
 			}
 			else {
 				dosWriter.writeUTF("FILE NOT FOUND");
-				System.out.printf("/get: FILE NOT FOUND\n");
+				System.out.printf("/store: FILE NOT FOUND\n");
 			}
 		}
 		catch (Exception e) {
