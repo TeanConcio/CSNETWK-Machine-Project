@@ -12,48 +12,67 @@ import java.net.*;
 import java.util.ArrayList;
 import java.io.*;
 
-public class ServerClass
-{
-	private static final int SERVER_PORT = 4000;
+public class ServerClass {
+
+    private static final int SERVER_PORT = 4000;
 	private static final String FILE_DIRECTORY = "files";
 
-	private static ArrayList<UserClass> userList = new ArrayList<UserClass>();
+    private static ArrayList<UserClass> userList = new ArrayList<UserClass>();
 
-	public static void main(String[] args)
-	{
 
-		ServerSocket serverSocket = null;
+    public static void main(String[] args) {
 
-		try {
-			// Initialize ServerSocket
-			serverSocket = new ServerSocket(SERVER_PORT);
-			System.out.println("Server: Listening on port " + SERVER_PORT + "...");
+        ServerSocket serverSocket = null;
 
-			// Loop to accept multiple clients
-			while (true) {
-				// Initialize Socket and accept connection
-				Socket serverEndpoint = serverSocket.accept();
-				System.out.println("Server: New client connected: " + serverEndpoint.getRemoteSocketAddress());
-				
-				// Initialize user
-				UserClass user = new UserClass(
-					new DataInputStream(serverEndpoint.getInputStream()), 
-					new DataOutputStream(serverEndpoint.getOutputStream()));
+        try {
+            // Initialize ServerSocket
+            serverSocket = new ServerSocket(SERVER_PORT);
+            System.out.println("Server: Listening on port " + SERVER_PORT + "...");
 
-				// Add user to list
-				userList.add(user);
+            while (true) {
 
-				// Reply to client
-				user.dosWriter.writeUTF("CONNECTION SUCCESSFUL");
-				System.out.printf("[%s] CONNECTION SUCCESSFUL\n", "Unknown");
+                Socket serverEndpoint = null;
 
-				// Receive the function to be performed
-				while (decideFunction(serverEndpoint, user)){}
+                try {
+                    // Initialize ServerSocket
+                    serverEndpoint = serverSocket.accept();
+                    System.out.println("Server: New client connected: " + serverEndpoint.getRemoteSocketAddress());
 
-				serverEndpoint.close();
-			}
-		}
-		catch (Exception e) {
+                    // Create final variable for thread
+                    final Socket finalServerEndpoint = serverEndpoint;
+
+                    Thread userThread = new Thread(() -> {
+                        try {
+                            // Initialize user
+                            UserClass user = new UserClass(
+                                new DataInputStream(finalServerEndpoint.getInputStream()), 
+                                new DataOutputStream(finalServerEndpoint.getOutputStream()));
+
+                            // Add user to list
+                            userList.add(user);
+
+                            // Reply to client
+                            user.dosWriter.writeUTF("CONNECTION SUCCESSFUL");
+                            System.out.printf("[%s] CONNECTION SUCCESSFUL\n", "Unknown");
+
+                            // Receive the function to be performed
+                            while (decideFunction(finalServerEndpoint, user)){}
+                        }
+                        catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }); 
+
+                    // Start thread
+                    userThread.start();
+                }
+                catch (Exception e) {
+                    serverEndpoint.close();
+                    e.printStackTrace();
+                }
+            }
+        }
+        catch (Exception e) {
 			e.printStackTrace();
 		}
 		finally {
@@ -66,9 +85,9 @@ public class ServerClass
 			}
 			System.out.println("Server: Connection is terminated.");
 		}
-	}
-
-
+    }
+    
+    
 	public static boolean decideFunction(Socket serverEndpoint, UserClass user) {
 
 		try {
