@@ -86,6 +86,9 @@ public class ClientClass {
                             String fileName = fullCommand.split(" ")[1];
                             sendFile (disReader, dosWriter, fileName);
                         }
+                        else if (Command.equals("/dir")) {
+                            System.out.println(disReader.readUTF());
+                        }
 
                         Message = disReader.readUTF();
                         Looper = verifyReply(Message, Name);
