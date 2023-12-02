@@ -27,7 +27,8 @@ public class ClientClass {
             String mainCommand = command[0];
             String ipAddress = command[1];
             int nPort = Integer.parseInt(command[2]);
-    
+
+            //TODO: Error Checking for other than /join and /?
             if (mainCommand.equals("/join")) {
 
                 clientEndpoint = new Socket(ipAddress, nPort);
@@ -217,7 +218,13 @@ public class ClientClass {
 
 				// Get File contents into byte array
 				byte[] fileContentBytes = new byte[(int) file.length()];
-				fileInputStream.read(fileContentBytes);
+                fileInputStream.read(fileContentBytes);
+                
+                for (int i = 0; i < file.length(); i++) {
+                    System.out.print(fileContentBytes[i]);
+                }
+                System.out.println("");
+				
 
 				// Send the size of the byte array, then the actual byte array
 				dosWriter.writeInt(fileContentBytes.length);
