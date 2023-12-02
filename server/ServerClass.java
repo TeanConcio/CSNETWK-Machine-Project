@@ -15,7 +15,7 @@ import java.io.*;
 public class ServerClass {
 
     private static final int SERVER_PORT = 4000;
-	private static final String FILE_DIRECTORY = "files";
+	private static final String FILE_DIRECTORY = System.getProperty("user.dir") + "\\server\\files\\";
 
     private static ArrayList<UserClass> userList = new ArrayList<UserClass>();
 
@@ -53,7 +53,7 @@ public class ServerClass {
 
                             // Reply to client
                             user.dosWriter.writeUTF("CONNECTION SUCCESSFUL");
-                            System.out.printf("[%s] CONNECTION SUCCESSFUL\n", "Unknown");
+                            logUserAction(user, "CONNECTION SUCCESSFUL");
 
                             // Receive the function to be performed
                             while (decideFunction(finalServerEndpoint, user)){}
@@ -86,6 +86,32 @@ public class ServerClass {
 			System.out.println("Server: Connection is terminated.");
 		}
     }
+
+
+	public static void logUserAction(UserClass user, String message) {
+
+		if (user.userHandle == null) System.out.printf("[%s] %s\n", "Unknown", message);
+		else System.out.printf("[%s] %s\n", user.userHandle, message);
+	}
+
+
+	public static boolean checkUserNotRegistered(UserClass user) {
+
+		try {
+			// Check if user handle is already taken
+			if (user.userHandle == null) {
+				user.dosWriter.writeUTF("NOT REGISTERED");
+				logUserAction(user, "/dir: NOT REGISTERED");
+				return false;
+			}
+			else
+				return true;
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
     
     
 	public static boolean decideFunction(Socket serverEndpoint, UserClass user) {
@@ -99,17 +125,10 @@ public class ServerClass {
 
 				case "/join":
 					user.dosWriter.writeUTF("ALREADY CONNECTED");
-					if (user.userHandle == null) System.out.printf("[%s] /join: ALREADY CONNECTED\n", "Unknown");
-					else System.out.printf("[%s] /join: ALREADY CONNECTED\n", user.userHandle);
+					logUserAction(user, "/join: ALREADY CONNECTED");
 					return true;
 
 				case "/register":
-					if (input.length != 2) {
-						user.dosWriter.writeUTF("INVALID NUMBER OF ARGUMENTS");
-						if (user.userHandle == null) System.out.printf("[%s] /register: INVALID NUMBER OF ARGUMENTS\n", "Unknown");
-						else System.out.printf("[%s] /register: INVALID NUMBER OF ARGUMENTS\n", user.userHandle);
-						return true;
-					}
 					register(user, input[1]);
 					return true;
 
@@ -118,40 +137,21 @@ public class ServerClass {
 					return false;
 
 				case "/dir":
-					if (user.userHandle == null) {
-						user.dosWriter.writeUTF("NOT REGISTERED");
-						if (user.userHandle == null) System.out.printf("[%s] /dir: NOT REGISTERED\n", "Unknown");
-						else System.out.printf("[%s] /dir: NOT REGISTERED\n", user.userHandle);
+					if (checkUserNotRegistered(user)) {
 						return true;
 					}
 					dir(user);
 					return true;
 
 				case "/store":
-					if (user.userHandle == null) {
-						user.dosWriter.writeUTF("NOT REGISTERED");
-						if (user.userHandle == null) System.out.printf("[%s] /store: NOT REGISTERED\n", "Unknown");
-						else System.out.printf("[%s] /store: NOT REGISTERED\n", user.userHandle);
-						return true;
-					}
-					if (input.length != 2) {
-						user.dosWriter.writeUTF("INVALID NUMBER OF ARGUMENTS");
-						System.out.printf("[%s] /store: INVALID NUMBER OF ARGUMENTS\n", user.userHandle);
+					if (checkUserNotRegistered(user)) {
 						return true;
 					}
 					store(user, input[1]);
 					return true;
 
 				case "/get":
-					if (user.userHandle == null) {
-						user.dosWriter.writeUTF("NOT REGISTERED");
-						System.out.printf("[%s] /get: NOT REGISTERED\n", user.userHandle);
-						return true;
-					}
-					if (input.length != 2) {
-						user.dosWriter.writeUTF("INVALID NUMBER OF ARGUMENTS");
-						if (user.userHandle == null) System.out.printf("[%s] /get: INVALID NUMBER OF ARGUMENTS\n", "Unknown");
-						else System.out.printf("[%s] /get: INVALID NUMBER OF ARGUMENTS\n", user.userHandle);
+					if (checkUserNotRegistered(user)) {
 						return true;
 					}
 					get(user, input[1]);
@@ -159,14 +159,12 @@ public class ServerClass {
 
 				default:
 					user.dosWriter.writeUTF("INVALID FUNCTION");
-					if (user.userHandle == null) System.out.printf("[%s] INVALID FUNCTION\n", "Unknown");
-					else System.out.printf("[%s] INVALID FUNCTION\n", user.userHandle);
+					logUserAction(user, input[0] + ": INVALID FUNCTION");
 					return true;
 			}
 		}
 		catch (SocketException e) {
-			if (user.userHandle == null) System.out.printf("Server: Client %s disconnected\n", "Unknown");
-			else System.out.printf("Server: Client %s disconnected\n", user.userHandle);
+			logUserAction(user, "CONNECTION TERMINATED");
 			userList.remove(user);
 			try {
 				serverEndpoint.close();
@@ -199,18 +197,18 @@ public class ServerClass {
 			// Check if user handle is already taken
 			if (user.userHandle != null) {
 				user.dosWriter.writeUTF("USER IS ALREADY REGISTERED");
-				System.out.printf("[%s] /register: USER IS ALREADY REGISTERED\n", user.userHandle);
+				logUserAction(user, "/register: USER IS ALREADY REGISTERED");
 			}
 			else if (getUserIndex(userHandle) != -1) {
 				user.dosWriter.writeUTF("USER HANDLE ALREADY TAKEN");
-				System.out.printf("[%s] /register: USER HANDLE ALREADY TAKEN\n", "Unknown");
+				logUserAction(user, "/register: USER HANDLE ALREADY TAKEN");
 			}
 			else {
 				user.userHandle = userHandle;
 
 				// Send Response
 				user.dosWriter.writeUTF("USER HANDLE REGISTERED");
-				System.out.printf("[%s] /register: USER HANDLE REGISTERED\n", user.userHandle);
+				logUserAction(user, "/register: USER HANDLE REGISTERED");
 			}
 		}
 		catch (Exception e) {
@@ -227,7 +225,7 @@ public class ServerClass {
 
 			// Send Response
 			user.dosWriter.writeUTF("USER LEFT");
-			System.out.printf("[%s] /leave: USER LEFT\n", user.userHandle);
+			logUserAction(user, "/leave: USER LEFT");
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -251,7 +249,7 @@ public class ServerClass {
 
 			// Send Response
 			user.dosWriter.writeUTF("DIRECTORY SENT");
-			System.out.printf("[%s] /dir: DIRECTORY SENT\n", user.userHandle);
+			logUserAction(user, "/dir: DIRECTORY SENT");
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -270,7 +268,7 @@ public class ServerClass {
 			user.disReader.readFully(fileContentBytes, 0, fileSize);
 
 			// Initialize File and FileOutputStream
-			File file = new File(filename);
+			File file = new File(FILE_DIRECTORY + filename);
 			FileOutputStream fileOutputStream = new FileOutputStream(file);
 
 			// Write the file using the byte array
@@ -280,7 +278,7 @@ public class ServerClass {
 
 			// Send Response
 			user.dosWriter.writeUTF("FILE STORED");
-			System.out.printf("[%s] /store: FILE STORED\n", user.userHandle);
+			logUserAction(user, "/store: FILE STORED");
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -307,7 +305,7 @@ public class ServerClass {
 			if (fileIndex != -1) {
 
 				// Initialize File and FileInputStream
-				File file = new File(filename);
+				File file = new File(FILE_DIRECTORY + filename);
 				FileInputStream fileInputStream = new FileInputStream(file.getAbsolutePath());
 
 				// Get File contents into byte array
@@ -322,11 +320,11 @@ public class ServerClass {
 
 				// Send Response
 				user.dosWriter.writeUTF("FILE SENT");
-				System.out.printf("[%s] /get: FILE SENT\n", user.userHandle);
+				logUserAction(user, "/get: FILE SENT");
 			}
 			else {
 				user.dosWriter.writeUTF("FILE NOT FOUND");
-				System.out.printf("[%s] /get: FILE NOT FOUND\n", user.userHandle);
+				logUserAction(user, "/get: FILE NOT FOUND");
 			}
 		}
 		catch (Exception e) {
