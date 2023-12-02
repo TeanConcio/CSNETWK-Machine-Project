@@ -10,6 +10,7 @@ import java.io.*;
 public class ClientClass {
     
     private static final String FILE_DIRECTORY = System.getProperty("user.dir") + "\\client\\files\\";
+    private static final Scanner scanner = new Scanner(System.in);
 
     public static void main(String[] args) {
 
@@ -19,8 +20,6 @@ public class ClientClass {
             // Send name and command to server
             //TODO : Please use '/?' to see the list of available functions.
             System.out.print("Enter a command: ");
-
-            Scanner scanner = new Scanner(System.in);
 
             String command[] = scanner.nextLine().split(" ");
 
@@ -88,7 +87,6 @@ public class ClientClass {
                             sendFile (disReader, dosWriter, fileName);
                         }
                         else if (Command.equals("/dir")) {
-                            System.out.println("Hi");
                             String Directories = disReader.readUTF();
                             System.out.println(Directories);
                         }
@@ -105,11 +103,11 @@ public class ClientClass {
             e.printStackTrace();
         } finally {
             System.out.println("Connection terminated" + "\n");
+            scanner.close();
         }
     }
 
     public static String registerUser (DataOutputStream dosWriter) {
-        Scanner scanner = new Scanner(System.in);
 
         System.out.print("Enter a command: ");
 
@@ -131,7 +129,6 @@ public class ClientClass {
     }
 
     public static String getInput(String Name) {
-        Scanner scanner = new Scanner(System.in);
         System.out.print("[" + Name + "] Enter command: ");
         String command = scanner.nextLine();
 
@@ -159,6 +156,8 @@ public class ClientClass {
                 break;
             case "FILE NOT FOUND":
                 System.out.println("[" + Name + "] File not found.");
+                break;
+            case "DIRECTORY SENT":
                 break;
             default:
         }
