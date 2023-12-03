@@ -19,15 +19,38 @@ public class ClientClass {
         try {
             // Send name and command to server
             //TODO : Please use '/?' to see the list of available functions.
+            //TODO : MAKE /? CHANGE ACCORDING TO CLIENT STATE
             System.out.print("Enter a command: ");
-
             String command[] = scanner.nextLine().split(" ");
 
             String mainCommand = command[0];
-            String ipAddress = command[1];
-            int nPort = Integer.parseInt(command[2]);
+            String ipAddress = "NULL";
+            int nPort = 0;
+
+            if (mainCommand.equals("/join")) {
+                ipAddress = command[1];
+                nPort = Integer.parseInt(command[2]);
+            }
 
             //TODO: Error Checking for other than /join and /?
+            while (!mainCommand.equals("/join")) {
+                if (mainCommand.equals("/?")) {
+                    getHelp("Before Join", "");
+                }
+                else {
+                    System.out.println("\nInvalid function. Please use '/?' to see the list of available functions.\n");
+                }
+
+                System.out.print("Enter a command: ");
+                command = scanner.nextLine().split(" ");
+
+                mainCommand = command[0];
+
+                if (mainCommand.equals("/join")) {
+                    ipAddress = command[1];
+                    nPort = Integer.parseInt(command[2]);
+                }
+            }
             if (mainCommand.equals("/join")) {
 
                 clientEndpoint = new Socket(ipAddress, nPort);
@@ -54,7 +77,8 @@ public class ClientClass {
                     while (Message.equals("USER HANDLE ALREADY TAKEN") || 
                             Message.equals("NOT REGISTERED") || 
                             Message.equals("INVALID FUNCTION") || 
-                            Message.equals("ALREADY CONNECTED")) {
+                            Message.equals("ALREADY CONNECTED") ||
+                            Message.equals("DISPLAY COMMANDS")) {
 
                         if (Message.equals("USER HANDLE REGISTERED")) {
                             System.out.println("Registered successfully!");
@@ -67,6 +91,8 @@ public class ClientClass {
                             System.out.println("Invalid function. Please use '/?' to see the list of available functions.");
                         } else if (Message.equals("ALREADY CONNECTED")) {
                             System.out.println("User is already connected.");
+                        } else if (Message.equals("DISPLAY COMMANDS")) {
+                            getHelp ("Before Register", "");
                         }
                         
                         Name = registerUser (dosWriter);
@@ -76,23 +102,24 @@ public class ClientClass {
                     while (Looper) {
                         fullCommand = getInput(Name);
                         dosWriter.writeUTF(fullCommand);
-                        System.out.println(fullCommand);
                         Command = fullCommand.split(" ")[0];
 
                         if (Command.equals("/get")) {
-
+                            String fileName = fullCommand.split(" ")[1];
+                            downloadFile(disReader, dosWriter, fileName, Name);
                         }
                         else if (Command.equals("/store")) {
                             String fileName = fullCommand.split(" ")[1];
-                            sendFile (disReader, dosWriter, fileName);
+                            sendFile (disReader, dosWriter, fileName, Name);
                         }
                         else if (Command.equals("/dir")) {
                             String Directories = disReader.readUTF();
                             System.out.println(Directories);
                         }
-
-                        Message = disReader.readUTF();
-                        Looper = verifyReply(Message, Name);
+                        else {
+                            Message = disReader.readUTF();
+                            Looper = verifyReply(Message, Name);
+                        }
                     }
                 }
 
@@ -105,6 +132,25 @@ public class ClientClass {
             System.out.println("Connection terminated" + "\n");
             scanner.close();
         }
+    }
+
+    public static void getHelp (String whatDoYouNeedHelpWith, String Name) {
+        System.out.println("\n" + Name + "List of available commands: ");
+        switch (whatDoYouNeedHelpWith) {
+            case "Before Join":
+                System.out.println("/join: Connects to the server [Usage: /join {IP Address} {Port Number}]");
+                break;
+            case "Before Register":
+                System.out.println("/register: Registers a unique alias [Usage: /register {Username}]");
+                break;
+            case "After Register":
+                System.out.println("/leave: Disconnects from the server [usage: /leave]");
+                System.out.println("/store: Stores a file in the server [usage: /store {File Name}]");
+                System.out.println("/dir: Requests a directory file list from the server [usage: /dir]");
+                System.out.println("/get: Downloads a file from the server [usage: /get {File Name}]");
+                break;
+        }
+        System.out.println("");
     }
 
     public static String registerUser (DataOutputStream dosWriter) {
@@ -138,34 +184,36 @@ public class ClientClass {
     public static boolean verifyReply(String Reply, String Name) {
         switch (Reply) {
             case "ALREADY CONNECTED":
-                System.out.println("[" + Name + "] User is already connected.");
+                System.out.println("\n[" + Name + "] User is already connected.\n");
                 break;
             case "INVALID FUNCTION":
-                System.out.println("[" + Name + "] Invalid function. Please use '/?' to see the list of available functions.");
+                System.out.println("\n[" + Name + "] Invalid function. Please use '/?' to see the list of available functions.\n");
                 break;
             case "USER IS ALREADY REGISTERED":
-                System.out.println("[" + Name + "] User is already registered.");
+                System.out.println("\n[" + Name + "] User is already registered.\n");
                 break;
             case "USER LEFT":
                 return false;
             case "FILE STORED":
-                System.out.println("[" + Name + "] File stored successfully!");
+                System.out.println("\n[" + Name + "] File stored successfully!\n");
                 break;
             case "FILE SENT":
-                System.out.println("[" + Name + "] File received at " + "TODO : Directory");
+                System.out.println("\n[" + Name + "] File sent successfully!\n");
                 break;
             case "FILE NOT FOUND":
-                System.out.println("[" + Name + "] File not found.");
+                System.out.println("\n[" + Name + "] File not found.\n");
                 break;
             case "DIRECTORY SENT":
                 break;
+            case "DISPLAY COMMANDS":
+                getHelp("After Register", "[" + Name + "]");
             default:
         }
 
         return true;
     }
 
-    public static void get(DataInputStream disReader, DataOutputStream dosWriter, String filename) {
+    public static void downloadFile(DataInputStream disReader, DataOutputStream dosWriter, String filename, String Name) {
 
 		try {
 			// Receive the file size
@@ -176,16 +224,15 @@ public class ClientClass {
 			disReader.readFully(fileContentBytes, 0, fileSize);
 
 			// Initialize File and FileOutputStream
-			File file = new File(filename);
+			File file = new File(FILE_DIRECTORY + filename);
 			FileOutputStream fileOutputStream = new FileOutputStream(file);
 
 			// Write the file using the byte array
 			fileOutputStream.write(fileContentBytes);
 
 			fileOutputStream.close();
-
-			// Send Response
-			System.out.printf("FILE STORED\n");
+            System.out.println(disReader.readUTF());
+			System.out.println("\n[" + Name + "] File successfully downloaded at " + FILE_DIRECTORY + filename + "\n");
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -193,12 +240,11 @@ public class ClientClass {
 	}
 
 
-	public static void sendFile (DataInputStream disReader, DataOutputStream dosWriter, String filename) {
+	public static void sendFile (DataInputStream disReader, DataOutputStream dosWriter, String filename, String Name) {
 
 		try {
 			// Get the list of filenames in the directory
             String[] filenames = (new File(FILE_DIRECTORY)).list();
-            System.out.println(filenames[0]);
             
 			// Find the index of the file
 			int fileIndex = -1;
@@ -219,13 +265,7 @@ public class ClientClass {
 				// Get File contents into byte array
 				byte[] fileContentBytes = new byte[(int) file.length()];
                 fileInputStream.read(fileContentBytes);
-                
-                for (int i = 0; i < file.length(); i++) {
-                    System.out.print(fileContentBytes[i]);
-                }
-                System.out.println("");
 				
-
 				// Send the size of the byte array, then the actual byte array
 				dosWriter.writeInt(fileContentBytes.length);
 				dosWriter.write(fileContentBytes);
@@ -233,10 +273,10 @@ public class ClientClass {
 				fileInputStream.close();
 
 				// Send Response
-				System.out.printf("/store: FILE SENT\n");
+				System.out.printf("\n[" + Name + "] File successfully stored in the server.\n");
 			}
 			else {
-				System.out.printf("/store: FILE NOT FOUND\n");
+				System.out.printf("\n[" + Name + "] File not found.\n");
 			}
 		}
 		catch (Exception e) {
