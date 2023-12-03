@@ -66,7 +66,6 @@ public class ClientClass {
                 String Message = disReader.readUTF();
 
                 boolean Looper = true;
-                System.out.println("HELLO");
 
                 if (Message.equals("CONNECTION SUCCESSFUL")) {
                     System.out.println("Connection successful!");
@@ -262,7 +261,8 @@ public class ClientClass {
 
 			// Check if file exists
 			if (fileIndex != -1) {
-
+                dosWriter.writeUTF("FILE FOUND");
+                
 				// Initialize File and FileInputStream
 				File file = new File(FILE_DIRECTORY + filename);
 				FileInputStream fileInputStream = new FileInputStream(file.getAbsolutePath());
@@ -275,14 +275,13 @@ public class ClientClass {
 				dosWriter.writeInt(fileContentBytes.length);
 				dosWriter.write(fileContentBytes);
 
-                System.out.println(fileContentBytes);
-
 				fileInputStream.close();
 
 				// Send Response
 				System.out.printf("\n[" + Name + "] File successfully stored in the server.\n");
 			}
 			else {
+                dosWriter.writeUTF("FILE NOT FOUND");
 				System.out.printf("\n[" + Name + "] File not found.\n");
 			}
 		}
