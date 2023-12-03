@@ -323,6 +323,9 @@ public class ServerClass {
 			// Check if file exists
 			if (fileIndex != -1) {
 
+				user.dosWriter.writeUTF("FILE FOUND");
+				logUserAction(user, "/get: FILE FOUND");
+
 				// Initialize File and FileInputStream
 				File file = new File(FILE_DIRECTORY + filename);
 				FileInputStream fileInputStream = new FileInputStream(file.getAbsolutePath());
