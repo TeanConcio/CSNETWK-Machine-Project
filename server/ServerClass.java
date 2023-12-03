@@ -279,25 +279,48 @@ public class ServerClass {
 	public static void store(UserClass user, String filename) {
 
 		try {
-			// Receive the file size
-			int fileSize = user.disReader.readInt();
+			// Get the list of filenames in the directory
+			String[] filenames = (new File(FILE_DIRECTORY)).list();
 
-			// Receive the file contents
-			byte[] fileContentBytes = new byte[fileSize];
-			user.disReader.readFully(fileContentBytes, 0, fileSize);
+			// Find the index of the file
+			int fileIndex = -1;
+			for (int i = 0; i < filenames.length; i++) {
+				if (filenames[i].equals(filename)) {
+					fileIndex = i;
+					break;
+				}
+			}
 
-			// Initialize File and FileOutputStream
-			File file = new File(FILE_DIRECTORY + filename);
-			FileOutputStream fileOutputStream = new FileOutputStream(file);
+			// Check if file exists
+			if (fileIndex == -1) {
+				user.dosWriter.writeUTF("FILE DOES NOT EXIST");
+				logUserAction(user, "/store: FILE DOES NOT EXIST");
 
-			// Write the file using the byte array
-			fileOutputStream.write(fileContentBytes);
+				// Receive the file size
+				int fileSize = user.disReader.readInt();
 
-			fileOutputStream.close();
+				// Receive the file contents
+				byte[] fileContentBytes = new byte[fileSize];
+				user.disReader.readFully(fileContentBytes, 0, fileSize);
 
-			// Send Response
-			user.dosWriter.writeUTF("FILE STORED");
-			logUserAction(user, "/store: FILE STORED");
+				// Initialize File and FileOutputStream
+				File file = new File(FILE_DIRECTORY + filename);
+				FileOutputStream fileOutputStream = new FileOutputStream(file);
+
+				// Write the file using the byte array
+				fileOutputStream.write(fileContentBytes);
+
+				fileOutputStream.close();
+
+				// Send Response
+				user.dosWriter.writeUTF("FILE STORED");
+				logUserAction(user, "/store: FILE STORED");
+			}
+			else {
+				user.dosWriter.writeUTF("FILE ALREADY EXISTS");
+				logUserAction(user, "/store: FILE ALREADY EXISTS");
+				return;
+			}
 		}
 		catch (Exception e) {
 			e.printStackTrace();
