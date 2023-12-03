@@ -217,22 +217,27 @@ public class ClientClass {
 
 		try {
 			// Receive the file size
-			int fileSize = disReader.readInt();
+            if (!disReader.readUTF().equals("FILE NOT FOUND")) {
+                int fileSize = disReader.readInt();
 
-			// Receive the file contents
-			byte[] fileContentBytes = new byte[fileSize];
-			disReader.readFully(fileContentBytes, 0, fileSize);
+                // Receive the file contents
+                byte[] fileContentBytes = new byte[fileSize];
+                disReader.readFully(fileContentBytes, 0, fileSize);
 
-			// Initialize File and FileOutputStream
-			File file = new File(FILE_DIRECTORY + filename);
-			FileOutputStream fileOutputStream = new FileOutputStream(file);
+                // Initialize File and FileOutputStream
+                File file = new File(FILE_DIRECTORY + filename);
+                FileOutputStream fileOutputStream = new FileOutputStream(file);
 
-			// Write the file using the byte array
-			fileOutputStream.write(fileContentBytes);
+                // Write the file using the byte array
+                fileOutputStream.write(fileContentBytes);
 
-			fileOutputStream.close();
-            System.out.println(disReader.readUTF());
-			System.out.println("\n[" + Name + "] File successfully downloaded at " + FILE_DIRECTORY + filename + "\n");
+                fileOutputStream.close();
+                System.out.println(disReader.readUTF());
+                System.out.println("\n[" + Name + "] File successfully downloaded at " + FILE_DIRECTORY + filename + "\n");
+            }
+			else {
+                System.out.println("\n[" + Name + "] File not found.\n");
+            }
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -269,6 +274,8 @@ public class ClientClass {
 				// Send the size of the byte array, then the actual byte array
 				dosWriter.writeInt(fileContentBytes.length);
 				dosWriter.write(fileContentBytes);
+
+                System.out.println(fileContentBytes);
 
 				fileInputStream.close();
 
