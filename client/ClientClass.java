@@ -1,7 +1,5 @@
 package client;
 
-import server.UserClass;
-
 import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -70,7 +68,6 @@ public class ClientClass {
             System.out.print("Enter a command: ");
             String command[] = initCommand.split(" ");
 
-            String mainCommand = command[0];
             String ipAddress = command[1];
             int nPort = Integer.parseInt(command[2]);
 
@@ -106,10 +103,7 @@ public class ClientClass {
 
     public void checkRegister (String regCommand) {
         try {
-            String command[] = regCommand.split(" ");
-
-            String mainCommand = command[0];
-
+            
             Name = registerUser(regCommand);
 
             String Message = disReader.readUTF();
