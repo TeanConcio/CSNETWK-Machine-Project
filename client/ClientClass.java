@@ -14,6 +14,7 @@ public class ClientClass {
     public boolean isJoined;
     public boolean isRegistered;
     public String command;
+    public String stringAppend;
     public String Name;
 
     public ClientClass() {
@@ -22,81 +23,7 @@ public class ClientClass {
         this.isRegistered = false;
         this.command = "";
         this.Name = "";
-    }
-
-    public void initializeClient(String initCommand) {
-
-        try {
-
-            String Name;
-            String fullCommand = "";
-            String Command;
-            String Message = disReader.readUTF();
-
-            boolean Looper = true;
-            
-            if (Message.equals("CONNECTION SUCCESSFUL")) {
-                System.out.println("Connection successful!");
-
-                Name = registerUser (fullCommand);
-                Message = disReader.readUTF();
-
-                while (Message.equals("USER HANDLE ALREADY TAKEN") || 
-                        Message.equals("NOT REGISTERED") || 
-                        Message.equals("INVALID FUNCTION") || 
-                        Message.equals("ALREADY CONNECTED") ||
-                        Message.equals("DISPLAY COMMANDS")) {
-
-                    if (Message.equals("USER HANDLE REGISTERED")) {
-                        System.out.println("Registered successfully!");
-                        break;
-                    } else if (Message.equals("USER HANDLE ALREADY TAKEN")) {
-                        System.out.println("That username is already taken! Please select another username...");
-                    } else if (Message.equals("NOT REGISTERED")) {
-                        System.out.println("This function is only available to registered users. Please register first.");
-                    } else if (Message.equals("INVALID FUNCTION")) {
-                        System.out.println("Invalid function. Please use '/?' to see the list of available functions.");
-                    } else if (Message.equals("ALREADY CONNECTED")) {
-                        System.out.println("User is already connected.");
-                    } else if (Message.equals("DISPLAY COMMANDS")) {
-                        getHelp ("Before Register", "");
-                    }
-                        
-                    Name = registerUser (fullCommand);
-                    Message = disReader.readUTF();
-                }
-
-                while (Looper) {
-                    fullCommand = getInput(Name);
-                    dosWriter.writeUTF(fullCommand);
-                    Command = fullCommand.split(" ")[0];
-
-                    if (Command.equals("/get")) {
-                        String fileName = fullCommand.split(" ")[1];
-                        downloadFile(fileName, Name);
-                    }
-                    else if (Command.equals("/store")) {
-                        String fileName = fullCommand.split(" ")[1];
-                        sendFile (fileName, Name);
-                    }
-                    else if (Command.equals("/dir")) {
-                        String Directories = disReader.readUTF();
-                        System.out.println(Directories);
-                    }
-                    else {
-                        Message = disReader.readUTF();
-                        Looper = verifyReply(Message, Name);
-                    }
-                }
-
-                // Close connection
-                clientEndpoint.close();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            System.out.println("Connection terminated" + "\n");
-        }
+        this.stringAppend = "";
     }
 
     public void checkJoin (String initCommand) {
@@ -114,8 +41,17 @@ public class ClientClass {
                 if (Message.equals("CONNECTION SUCCESSFUL")) {
                     System.out.println("Connection successful!");
                     isJoined = true;
+                    verifyReply(Message, "");
                     return;
                 }
+
+                verifyReply(Message, "");
+            }
+            else if (mainCommand.equals("/?")) {
+                getHelp(""); 
+            }
+            else {
+                stringAppend = "Invalid command. Please use '/?' to view available commands.\n";
             }
 
             isJoined = false;
@@ -132,62 +68,35 @@ public class ClientClass {
             String command[] = initCommand.split(" ");
 
             String mainCommand = command[0];
-            String ipAddress = "NULL";
-            int nPort = 0;
+            String ipAddress = command[1];
+            int nPort = Integer.parseInt(command[2]);
 
-            if (mainCommand.equals("/join")) {
-                ipAddress = command[1];
-                nPort = Integer.parseInt(command[2]);
-            }
-
-            if (!mainCommand.equals("/join")) {
-                if (mainCommand.equals("/?")) {
-                    getHelp("Before Join", "");
-                }
-                else {
-                    System.out.println("\nInvalid function. Please use '/?' to see the list of available functions.\n");
-                }
-
-                System.out.print("Enter a command: ");
-                //command = scanner.nextLine().split(" ");
-
-                mainCommand = command[0];
-
-                if (mainCommand.equals("/join")) {
-                    ipAddress = command[1];
-                    nPort = Integer.parseInt(command[2]);
-                }
-            }
-            else if (mainCommand.equals("/join")) {
-
-                clientEndpoint = new Socket(ipAddress, nPort);
-                System.out.println(ipAddress + ": Connecting to server at " + clientEndpoint.getRemoteSocketAddress() + "\n");
+            clientEndpoint = new Socket(ipAddress, nPort);
+            System.out.println(ipAddress + ": Connecting to server at " + clientEndpoint.getRemoteSocketAddress() + "\n");
     
-                // Initialize input and output streams
-                dosWriter = new DataOutputStream(clientEndpoint.getOutputStream());
-                disReader = new DataInputStream(clientEndpoint.getInputStream());
-            }
+            // Initialize input and output streams
+            dosWriter = new DataOutputStream(clientEndpoint.getOutputStream());
+            disReader = new DataInputStream(clientEndpoint.getInputStream());
         }
         catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void getHelp (String whatDoYouNeedHelpWith, String Name) {
-        System.out.println("\n" + Name + "List of available commands: ");
-        switch (whatDoYouNeedHelpWith) {
-            case "Before Join":
-                System.out.println("/join: Connects to the server [Usage: /join {IP Address} {Port Number}]");
-                break;
-            case "Before Register":
-                System.out.println("/register: Registers a unique alias [Usage: /register {Username}]");
-                break;
-            case "After Register":
-                System.out.println("/leave: Disconnects from the server [usage: /leave]");
-                System.out.println("/store: Stores a file in the server [usage: /store {File Name}]");
-                System.out.println("/dir: Requests a directory file list from the server [usage: /dir]");
-                System.out.println("/get: Downloads a file from the server [usage: /get {File Name}]");
-                break;
+    public void getHelp (String Name) {
+        stringAppend = Name + "List of available commands: \n";
+
+        if (!isJoined) {
+            stringAppend = stringAppend + "/join: Connects to the server [Usage: /join {IP Address} {Port Number}]\n";
+        }
+        else if (isJoined && !isRegistered) {
+            stringAppend = stringAppend + "/register: Registers a unique alias [Usage: /register {Username}]\n";
+        }
+        else if (isJoined && isRegistered) {
+            stringAppend = stringAppend + "/leave: Disconnects from the server [usage: /leave]\n";
+            stringAppend = stringAppend + "/store: Stores a file in the server [usage: /store {File Name}]\n";
+            stringAppend = stringAppend + "/dir: Requests a directory file list from the server [usage: /dir]\n";
+            stringAppend = stringAppend + "/get: Downloads a file from the server [usage: /get {File Name}]\n";
         }
         System.out.println("");
     }
@@ -198,18 +107,18 @@ public class ClientClass {
 
             String mainCommand = command[0];
 
-            if (mainCommand.equals("/register")) {
+            Name = registerUser(regCommand);
 
-                Name = registerUser(regCommand);
+            String Message = disReader.readUTF();
 
-                String Message = disReader.readUTF();
-
-                if (Message.equals("USER HANDLE REGISTERED")) {
-                    System.out.println("User handle [" + Name + "] registered successfully!");
-                    isRegistered = true;
-                    return;
-                }
+            if (Message.equals("USER HANDLE REGISTERED")) {
+                System.out.println("User handle [" + Name + "] registered successfully!");
+                isRegistered = true;
+                verifyReply(Message, Name);
+                return;
             }
+                
+            verifyReply(Message, "");
 
             isRegistered = false;
         }
@@ -219,8 +128,6 @@ public class ClientClass {
     }
 
     public String registerUser (String command) {
-
-        System.out.print("Enter a command: ");
 
         String Name = "NULL";
 
@@ -238,39 +145,91 @@ public class ClientClass {
         return Name;
     }
 
-    public String getInput(String Name) {
-        System.out.print("[" + Name + "] Enter command: ");
-        //String command = scanner.nextLine();
 
-        return command;
+    public void routeCommands (String fullCommand) {
+        try {
+            dosWriter.writeUTF(fullCommand);
+            String Command = fullCommand.split(" ")[0];
+            String Message;
+            System.out.println(Command);
+
+            if (Command.equals("/get")) {
+                String fileName = fullCommand.split(" ")[1];
+                downloadFile(fileName, Name);
+            }
+            else if (Command.equals("/store")) {
+                String fileName = fullCommand.split(" ")[1];
+                sendFile (fileName, Name);
+                Message = disReader.readUTF();
+                System.out.println(Message);
+            }
+            else if (Command.equals("/dir")) {
+                String Directories = disReader.readUTF();
+                stringAppend = Directories;
+            }
+            else {
+                Message = disReader.readUTF();
+                System.out.println(Message);
+                verifyReply(Message, Name);
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void leaveServer () {
+        try {
+            clientEndpoint.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public boolean verifyReply(String Reply, String Name) {
+        if (Name != "") {
+            Name = "[" + Name + "]";
+        }
         switch (Reply) {
+            case "CONNECTION SUCCESSFUL":
+                stringAppend = "Connection successful!\n";
+                break;
+            case "USER HANDLE REGISTERED":
+                stringAppend = "User handle " + Name + " registered successfully!\n";
+                break;
+            case "USER HANDLE ALREADY TAKEN":
+                stringAppend = "That username is already taken. Please select another usrename...\n";
+                break;
+            case "NOT REGISTERED":
+                stringAppend = "This command is only available to registered users. Please register first.\n";
+                break;
             case "ALREADY CONNECTED":
-                System.out.println("\n[" + Name + "] User is already connected.\n");
+                stringAppend = Name + " User is already connected.\n";
                 break;
             case "INVALID FUNCTION":
-                System.out.println("\n[" + Name + "] Invalid function. Please use '/?' to see the list of available functions.\n");
+                stringAppend =  Name + " Invalid command. Please use '/?' to view available commands.\n";
                 break;
             case "USER IS ALREADY REGISTERED":
-                System.out.println("\n[" + Name + "] User is already registered.\n");
+                stringAppend = Name + " User is already registered.\n";
                 break;
             case "USER LEFT":
+                stringAppend = Name + "Connection terminated.\n";
+                leaveServer();
                 return false;
             case "FILE STORED":
-                System.out.println("\n[" + Name + "] File stored successfully!\n");
+                stringAppend = Name + " File successfully downloaded at ";
                 break;
             case "FILE SENT":
-                System.out.println("\n[" + Name + "] File sent successfully!\n");
+                stringAppend = Name + " File successfully stored in the server.\n";
                 break;
             case "FILE NOT FOUND":
-                System.out.println("\n[" + Name + "] File not found.\n");
+                stringAppend = Name + " File not found.\n";
                 break;
             case "DIRECTORY SENT":
                 break;
             case "DISPLAY COMMANDS":
-                getHelp("After Register", "[" + Name + "]");
+                getHelp(Name);
             default:
         }
 
@@ -280,8 +239,11 @@ public class ClientClass {
     public void downloadFile(String filename, String Name) {
 
 		try {
+            System.out.println("This is a test");
+            String Message = disReader.readUTF();
+            System.out.println(Message);
 			// Receive the file size
-            if (!disReader.readUTF().equals("FILE NOT FOUND")) {
+            if (!Message.equals("FILE NOT FOUND")) {
                 int fileSize = disReader.readInt();
 
                 // Receive the file contents
@@ -297,9 +259,11 @@ public class ClientClass {
 
                 fileOutputStream.close();
                 System.out.println(disReader.readUTF());
-                System.out.println("\n[" + Name + "] File successfully downloaded at " + FILE_DIRECTORY + filename + "\n");
+                verifyReply("FILE STORED", Name);
+                stringAppend = stringAppend + FILE_DIRECTORY + filename + "\n";
             }
 			else {
+                verifyReply("FILE NOT FOUND", Name);
                 System.out.println("\n[" + Name + "] File not found.\n");
             }
 		}
@@ -343,10 +307,12 @@ public class ClientClass {
 				fileInputStream.close();
 
 				// Send Response
+                verifyReply("FILE SENT", Name);
 				System.out.printf("\n[" + Name + "] File successfully stored in the server.\n");
 			}
 			else {
                 dosWriter.writeUTF("FILE NOT FOUND");
+                verifyReply("FILE NOT FOUND", Name);
 				System.out.printf("\n[" + Name + "] File not found.\n");
 			}
 		}

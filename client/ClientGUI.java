@@ -6,7 +6,6 @@ import java.awt.event.ActionListener;
 
 public class ClientGUI {
 
-    private ClientLogic clientLogic;
     private ClientClass clientClass;
     private JTextArea messageArea;
     private JTextField inputField;
@@ -15,11 +14,6 @@ public class ClientGUI {
     public ClientGUI(ClientClass clientClass) {
         this.clientClass = clientClass;
         initializeGUI();
-    }
-
-    // Add a method to set the clientLogic field
-    public void setClientLogic(ClientLogic clientLogic) {
-        this.clientLogic = clientLogic;
     }
 
     private void initializeGUI() {
@@ -78,6 +72,10 @@ public class ClientGUI {
                         System.out.println(initCommand);
                         clientClass.checkRegister(initCommand);
                     }
+                    else {
+                        System.out.println(initCommand);
+                        clientClass.routeCommands(initCommand);
+                    }
                     return null;
                 }
     
@@ -86,17 +84,8 @@ public class ClientGUI {
                     // Re-enable input after the operation is complete
                     inputField.setEnabled(true);
                     submitButton.setEnabled(true);
-    
-                    if (!clientClass.isJoined) {
-                        // Handle the case when not joined (perhaps display an error message)
-                        messageArea.append("Invalid command. Please try again.\n");
-                    }
-                    else if (clientClass.isJoined && !clientClass.isRegistered) {
-                        messageArea.append("Connection successful!\n");
-                    }
-                    else if (clientClass.isJoined && clientClass.isRegistered) {
-                        messageArea.append("User handle [" + clientClass.Name + "] registered successfully!\n");
-                    }
+                    
+                    messageArea.append(clientClass.stringAppend);
 
                     inputField.setText("");
                     inputField.requestFocus();
@@ -110,9 +99,7 @@ public class ClientGUI {
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             ClientClass clientClass = new ClientClass();
-            ClientLogic clientLogic = new ClientLogic(new ClientGUI(clientClass), clientClass);
-
-            clientLogic.getClientGUI().setClientLogic(clientLogic);
+            new ClientGUI(clientClass);
         });
     }
 }
