@@ -3,11 +3,14 @@ package client;
 import server.UserClass;
 
 import java.net.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.io.*;
 
 public class ClientClass {
     
-    private String FILE_DIRECTORY = System.getProperty("user.dir") + "\\client\\files\\";
+    private String FILE_DIRECTORY;
     private DataOutputStream dosWriter;
     private DataInputStream disReader;
     private Socket clientEndpoint;
@@ -18,7 +21,7 @@ public class ClientClass {
     public String Name;
 
     public ClientClass() {
-        this.FILE_DIRECTORY = System.getProperty("user.dir") + "\\client\\files\\";
+        this.FILE_DIRECTORY = System.getProperty("user.dir") + "\\client\\";
         this.isJoined = false;
         this.isRegistered = false;
         this.command = "";
@@ -114,6 +117,7 @@ public class ClientClass {
             if (Message.equals("USER HANDLE REGISTERED")) {
                 System.out.println("User handle [" + Name + "] registered successfully!");
                 isRegistered = true;
+                FILE_DIRECTORY = FILE_DIRECTORY + Name + "\\";
                 verifyReply(Message, Name);
                 return;
             }
@@ -165,7 +169,9 @@ public class ClientClass {
             }
             else if (Command.equals("/dir")) {
                 String Directories = disReader.readUTF();
-                stringAppend = Directories;
+                stringAppend = "[" + Name + "] List of available files for download:\n" + Directories + "\n";
+                Message = disReader.readUTF();
+                verifyReply(Message, Name);
             }
             else {
                 Message = disReader.readUTF();
@@ -214,7 +220,7 @@ public class ClientClass {
                 stringAppend = Name + " User is already registered.\n";
                 break;
             case "USER LEFT":
-                stringAppend = Name + "Connection terminated.\n";
+                stringAppend = Name + " Connection terminated.\n";
                 leaveServer();
                 return false;
             case "FILE STORED":
@@ -239,6 +245,9 @@ public class ClientClass {
     public void downloadFile(String filename, String Name) {
 
 		try {
+            Path path = Paths.get(FILE_DIRECTORY);
+            Files.createDirectories(path);
+
             System.out.println("This is a test");
             String Message = disReader.readUTF();
             System.out.println(Message);
@@ -276,17 +285,23 @@ public class ClientClass {
 	public void sendFile (String filename, String Name) {
 
 		try {
+            Path path = Paths.get(FILE_DIRECTORY);
+            Files.createDirectories(path);
+
 			// Get the list of filenames in the directory
             String[] filenames = (new File(FILE_DIRECTORY)).list();
             
 			// Find the index of the file
 			int fileIndex = -1;
-			for (int i = 0; i < filenames.length; i++) {
-				if (filenames[i].equals(filename)) {
-					fileIndex = i;
-					break;
-				}
-			}
+            if (filenames != null) {
+                for (int i = 0; i < filenames.length; i++) {
+                    if (filenames[i].equals(filename)) {
+                        fileIndex = i;
+                        break;
+                    }
+                }
+            }
+			
 
 			// Check if file exists
 			if (fileIndex != -1) {
