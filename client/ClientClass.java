@@ -33,26 +33,30 @@ public class ClientClass {
 
             String mainCommand = command[0];
 
-            if (mainCommand.equals("/join")) {
+            if (mainCommand.equals("/join") && command.length == 3) {
 
                 joinServer(initCommand);
 
-                String Message = disReader.readUTF();
+                if (clientEndpoint != null) {
+                    String Message = disReader.readUTF();
 
-                if (Message.equals("CONNECTION SUCCESSFUL")) {
-                    System.out.println("Connection successful!");
-                    isJoined = true;
+                    if (Message.equals("CONNECTION SUCCESSFUL")) {
+                        System.out.println("Connection successful!");
+                        isJoined = true;
+                        verifyReply(Message, "");
+                        return;
+                    }
+
                     verifyReply(Message, "");
-                    return;
                 }
-
-                verifyReply(Message, "");
+                else
+                    stringAppend = "Unable to connect to specified server. Please recheck your server credentials and try again.\n";
             }
             else if (mainCommand.equals("/?")) {
                 getHelp(""); 
             }
             else {
-                stringAppend = "Invalid command. Please use '/?' to view available commands.\n";
+                stringAppend = "Invalid command or command parameters. Please use '/?' to view available commands.\n";
             }
 
             isJoined = false;
@@ -68,12 +72,14 @@ public class ClientClass {
             System.out.print("Enter a command: ");
             String command[] = initCommand.split(" ");
 
-<<<<<<< HEAD
-=======
             //String mainCommand = command[0];
->>>>>>> ea261bf7396d783631e3269c64f1f2cc3423a718
             String ipAddress = command[1];
             int nPort = Integer.parseInt(command[2]);
+
+            // Prevent joining non-local servers
+
+            if (!ipAddress.equals("localhost") && !ipAddress.equals("127.0.0.1"))
+                throw new Exception();
 
             clientEndpoint = new Socket(ipAddress, nPort);
             System.out.println(ipAddress + ": Connecting to server at " + clientEndpoint.getRemoteSocketAddress() + "\n");
@@ -107,14 +113,10 @@ public class ClientClass {
 
     public void checkRegister (String regCommand) {
         try {
-<<<<<<< HEAD
-            
-=======
             //String command[] = regCommand.split(" ");
 
             //String mainCommand = command[0];
 
->>>>>>> ea261bf7396d783631e3269c64f1f2cc3423a718
             Name = registerUser(regCommand);
             String Message = "NULL";
             if (!Name.equals("NULL")) {
@@ -168,6 +170,15 @@ public class ClientClass {
 
     public void routeCommands (String fullCommand) {
         try {
+
+            // Check if server is still connected
+            if (clientEndpoint.isClosed()) {
+                stringAppend = "Current server is no longer connected. Please join another server.\n";
+                this.isJoined = false;
+                this.isRegistered = false;
+                return;
+            }
+
             dosWriter.writeUTF(fullCommand);
             String Command = fullCommand.split(" ")[0];
             String Message;
@@ -213,6 +224,7 @@ public class ClientClass {
         if (Name != "") {
             Name = "[" + Name + "]";
         }
+        System.out.println(Reply);
         switch (Reply) {
             case "CONNECTION SUCCESSFUL":
                 stringAppend = "Connection successful!\n";
@@ -252,7 +264,9 @@ public class ClientClass {
                 break;
             case "DISPLAY COMMANDS":
                 getHelp(Name);
+                break;
             default:
+                break;
         }
 
         return true;
