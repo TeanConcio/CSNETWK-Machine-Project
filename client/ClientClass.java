@@ -105,8 +105,10 @@ public class ClientClass {
         try {
             
             Name = registerUser(regCommand);
-
-            String Message = disReader.readUTF();
+            String Message = "NULL";
+            if (!Name.equals("NULL")) {
+                Message = disReader.readUTF();
+            }
 
             if (Message.equals("USER HANDLE REGISTERED")) {
                 System.out.println("User handle [" + Name + "] registered successfully!");
@@ -115,9 +117,11 @@ public class ClientClass {
                 verifyReply(Message, Name);
                 return;
             }
-                
-            verifyReply(Message, "");
-
+            
+            if (stringAppend.equals("Username [NULL] is a reserved username, please choose another username.")) {
+                verifyReply(Message, "");
+            }
+            
             isRegistered = false;
         }
         catch (Exception e) {
@@ -131,10 +135,17 @@ public class ClientClass {
 
         if (command.split(" ").length > 1) {
             Name = command.split(" ")[1];
+            System.out.println(Name.equals("NULL"));
+            if (Name.equals("NULL")) {
+                stringAppend = "Username [NULL] is a reserved username, please choose another username.\n";
+            }
         }
 
         try {
-            dosWriter.writeUTF(command);
+            if (!Name.equals("NULL")) {
+                System.out.println("Hello");
+                dosWriter.writeUTF(command);
+            }
         }
         catch (Exception e) {
             e.printStackTrace();
