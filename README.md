@@ -39,6 +39,7 @@
 - Server Stores Files Into a Dedicated Folder
 - Robust Error Handling
 - Official Collaborative Github Repository
+- Phase-by-Phase Development Cycle
 
 
 
