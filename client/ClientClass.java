@@ -29,6 +29,7 @@ public class ClientClass {
     public String command;
     public String stringAppend;
     public String Name;
+    public String Inbox;
     
     public String receivedMessage = "";
     public boolean newMessage = false;
@@ -40,6 +41,69 @@ public class ClientClass {
         this.command = "";
         this.Name = "";
         this.stringAppend = "";
+        this.Inbox = "";
+    }
+
+    public void routeCommands (String fullCommand) {
+        try {
+            String Command = fullCommand.split(" ")[0];
+            if (!Command.equals("/inbox")) {
+                dosWriter.writeUTF(fullCommand);
+            }
+            String Message;
+            System.out.println(Command);
+
+            if (Command.equals("/get")) {
+                String fileName = fullCommand.split(" ")[1];
+                downloadFile(fileName, Name);
+            }
+            else if (Command.equals("/store")) {
+                String fileName = fullCommand.split(" ")[1];
+                sendFile (fileName, Name);
+                Message = disReader.readUTF();
+                System.out.println(Message);
+            }
+            else if (Command.equals("/dir")) {
+                String Directories = disReader.readUTF();
+                stringAppend = "[" + Name + "] List of available files for download:\n" + Directories + "\n";
+                Message = disReader.readUTF();
+                verifyReply(Message, Name);
+            }
+            else if (Command.equals("/message")) {
+                Message = disReader.readUTF();
+                verifyReply(Message, Name);
+                System.out.println(stringAppend);
+            }
+            else if (Command.equals("/inbox")) {
+                if (Inbox.equals("")) {
+                    stringAppend = "\n[" + Name + "] You have no messages in your inbox.\nTo send a message, please use [/message {recipient} {message}]\n\n";
+                }
+                else {
+                    stringAppend = "\n[" + Name + "] Your messaging history:\n";
+                    stringAppend += Inbox + "\n";
+                }
+            }
+            else {
+                Message = disReader.readUTF();
+                System.out.println(Message);
+                verifyReply(Message, Name);
+            }
+        }
+        catch (SocketException e) {
+            e.printStackTrace();
+            stringAppend = "Current server is no longer connected. Please join another server.\n";
+            this.isJoined = false;
+            this.isRegistered = false;
+        }
+        catch (EOFException e) {
+            e.printStackTrace();
+            stringAppend = "Current server is no longer connected. Please join another server.\n";
+            this.isJoined = false;
+            this.isRegistered = false;
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void checkJoin (String initCommand) {
@@ -65,6 +129,7 @@ public class ClientClass {
                                 // Receive the function to be performed
                                 while (true){
                                     receivedMessage = disReaderMessage.readUTF();
+                                    Inbox += receivedMessage + "\n";
                                     System.out.println(receivedMessage);
                                     newMessage = true;
                                 }
@@ -143,6 +208,7 @@ public class ClientClass {
             stringAppend = stringAppend + "/get: Downloads a file from the server [usage: /get {File Name}]\n";
             stringAppend = stringAppend + "/message: Sends a message to a user [usage: /message {Recipient} {Message}]\n";
             stringAppend = stringAppend + "/broadcast: Sends a message to all users [usage: /broadcast {Message}]\n";
+            stringAppend = stringAppend + "/inbox: Shows your message history [usage: /inbox]\n";
         }
         System.out.println("");
     }
@@ -213,58 +279,6 @@ public class ClientClass {
         }
 
         return Name;
-    }
-    
-
-    public void routeCommands (String fullCommand) {
-        try {
-            dosWriter.writeUTF(fullCommand);
-            String Command = fullCommand.split(" ")[0];
-            String Message;
-            System.out.println(Command);
-
-            if (Command.equals("/get")) {
-                String fileName = fullCommand.split(" ")[1];
-                downloadFile(fileName, Name);
-            }
-            else if (Command.equals("/store")) {
-                String fileName = fullCommand.split(" ")[1];
-                sendFile (fileName, Name);
-                Message = disReader.readUTF();
-                System.out.println(Message);
-            }
-            else if (Command.equals("/dir")) {
-                String Directories = disReader.readUTF();
-                stringAppend = "[" + Name + "] List of available files for download:\n" + Directories + "\n";
-                Message = disReader.readUTF();
-                verifyReply(Message, Name);
-            }
-            else if (Command.equals("/message")) {
-                Message = disReader.readUTF();
-                verifyReply(Message, Name);
-                System.out.println(stringAppend);
-            }
-            else {
-                Message = disReader.readUTF();
-                System.out.println(Message);
-                verifyReply(Message, Name);
-            }
-        }
-        catch (SocketException e) {
-            e.printStackTrace();
-            stringAppend = "Current server is no longer connected. Please join another server.\n";
-            this.isJoined = false;
-            this.isRegistered = false;
-        }
-        catch (EOFException e) {
-            e.printStackTrace();
-            stringAppend = "Current server is no longer connected. Please join another server.\n";
-            this.isJoined = false;
-            this.isRegistered = false;
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     public void leaveServer () {
