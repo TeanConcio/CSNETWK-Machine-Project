@@ -174,7 +174,7 @@ public class ClientClass {
 
         return Name;
     }
-
+    
 
     public void routeCommands (String fullCommand) {
         try {
