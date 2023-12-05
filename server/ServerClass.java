@@ -32,21 +32,26 @@ public class ServerClass {
             while (true) {
 
                 Socket serverEndpoint = null;
+				Socket serverMessageEndpoint = null;
 
                 try {
                     // Initialize ServerSocket
                     serverEndpoint = serverSocket.accept();
+					serverMessageEndpoint = serverSocket.accept();
                     System.out.println("Server: New client connected: " + serverEndpoint.getRemoteSocketAddress());
+					System.out.println("Server: New client messenger connected: " + serverMessageEndpoint.getRemoteSocketAddress());
 
                     // Create final variable for thread
                     final Socket finalServerEndpoint = serverEndpoint;
+					final Socket finalServerMessageEndpoint = serverMessageEndpoint;
 
                     Thread userThread = new Thread(() -> {
                         try {
                             // Initialize user
                             UserClass user = new UserClass(
                                 new DataInputStream(finalServerEndpoint.getInputStream()), 
-                                new DataOutputStream(finalServerEndpoint.getOutputStream()));
+                                new DataOutputStream(finalServerEndpoint.getOutputStream()),
+								new DataOutputStream(finalServerMessageEndpoint.getOutputStream()));
 
                             // Add user to list
                             userList.add(user);
@@ -162,6 +167,20 @@ public class ServerClass {
 					get(user, parameters);
 					return true;
 				
+				case "/message":
+					if (checkUserNotRegistered(user)) {
+						return true;
+					}
+					message(user, parameters);
+					return true;
+				
+				case "/broadcast":
+					if (checkUserNotRegistered(user)) {
+						return true;
+					}
+					broadcast(user, parameters);
+					return true;
+				
 				case "/?":
 					user.dosWriter.writeUTF("DISPLAY COMMANDS");
 					logUserAction(user, "/?: DISPLAY COMMANDS");
@@ -259,7 +278,7 @@ public class ServerClass {
 				// Merge the filenames into a single string
 				String filenames = "";
 				for (int i = 0; i < filenamesList.length - 1; i++) {
-					filenames += filenamesList[i] + "\n";
+					filenames += "\t" + filenamesList[i] + "\n";
 				}
 				filenames += filenamesList[filenamesList.length - 1];
 
@@ -355,6 +374,57 @@ public class ServerClass {
 				user.dosWriter.writeUTF("FILE NOT FOUND");
 				logUserAction(user, "/get: FILE NOT FOUND");
 			}
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+
+	public static void message(UserClass user, String parameters) {
+
+		try {
+			// Split the input into user handle and message
+			String userHandle = parameters.split(" ")[0];
+			String message = parameters.split(userHandle, 2)[1].trim();
+
+			// Find the index of the user
+			int userIndex = getUserIndex(userHandle);
+
+			// Check if user exists
+			if (userIndex == -1) {
+				user.dosWriter.writeUTF("USER NOT FOUND");
+				logUserAction(user, "/message: USER NOT FOUND");
+				return;
+			}
+
+			// Send message to user
+			userList.get(userIndex).dosWriterMessage.writeUTF(user.userHandle + ": " + message);
+			user.dosWriterMessage.writeUTF(user.userHandle + ": " + message);
+
+			// Send Response
+			user.dosWriter.writeUTF("MESSAGE SENT");
+			logUserAction(user, "/message: MESSAGE SENT");
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+
+	public static void broadcast(UserClass user, String message) {
+
+		try {
+			// Send message to all users
+			for (UserClass userClass : userList) {
+				if (userClass.userHandle != null) {
+					userClass.dosWriterMessage.writeUTF(user.userHandle + "(broadcast) : " + message);
+				}
+			}
+
+			// Send Response
+			user.dosWriter.writeUTF("MESSAGE BROADCASTED");
+			logUserAction(user, "/broadcast: MESSAGE BROADCASTED");
 		}
 		catch (Exception e) {
 			e.printStackTrace();

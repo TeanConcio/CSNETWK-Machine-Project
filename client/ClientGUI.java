@@ -1,3 +1,11 @@
+/* 
+ * CSNETWK S12
+ * 
+ * Chan, Dane
+ * Concio, Tean
+ * Sia, Dominic
+*/
+
 package client;
 
 import javax.swing.*;
@@ -64,35 +72,68 @@ public class ClientGUI {
             SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
                 @Override
                 protected Void doInBackground() throws Exception {
-                    System.out.println(clientClass.isJoined + " " + clientClass.isRegistered);
-                    if (!clientClass.isJoined) {
-                        clientClass.checkJoin(initCommand);
+                    try {
+                        System.out.println(clientClass.isJoined + " " + clientClass.isRegistered);
+                        if (!clientClass.isJoined) {
+                            clientClass.checkJoin(initCommand);
+                        }
+                        else if (!clientClass.isRegistered) {
+                            System.out.println(initCommand);
+                            clientClass.checkRegister(initCommand);
+                        }
+                        else {
+                            System.out.println("route commands1");
+                            System.out.println(initCommand);
+                            clientClass.routeCommands(initCommand);
+                            System.out.println("route commands2");
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-                    else if (!clientClass.isRegistered) {
-                        System.out.println(initCommand);
-                        clientClass.checkRegister(initCommand);
-                    }
-                    else {
-                        System.out.println(initCommand);
-                        clientClass.routeCommands(initCommand);
-                    }
+            
                     return null;
                 }
-    
+            
                 @Override
                 protected void done() {
-                    // Re-enable input after the operation is complete
-                    inputField.setEnabled(true);
-                    submitButton.setEnabled(true);
-                    
-                    messageArea.append(clientClass.stringAppend);
+                    try {
+                        // Re-enable input after the operation is complete
+                        inputField.setEnabled(true);
+                        submitButton.setEnabled(true);
+                        
+                        messageArea.append(clientClass.stringAppend);
+                        clientClass.stringAppend = "";
 
-                    inputField.setText("");
-                    inputField.requestFocus();
+                        inputField.setText("");
+                        inputField.requestFocus();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             };
-    
+            
             worker.execute();
+
+            // New thread to listen for new data
+            new Thread(() -> {
+                try {
+                    while (true) {
+                        // Check if there is new data from the server
+                        if (clientClass.newMessage) {
+                            // Update the GUI using SwingUtilities.invokeLater()
+                            SwingUtilities.invokeLater(() -> {
+
+                                clientClass.newMessage = false;
+                                messageArea.append(clientClass.receivedMessage + "\n");
+                            });
+                        }
+                        // Sleep for a while to avoid busy waiting
+                        Thread.sleep(100);
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }).start();
         }
     }
 

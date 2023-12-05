@@ -1,23 +1,38 @@
+/* 
+ * CSNETWK S12
+ * 
+ * Chan, Dane
+ * Concio, Tean
+ * Sia, Dominic
+*/
+
 package client;
 
 import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
 import java.io.*;
 
 public class ClientClass {
     
     private String FILE_DIRECTORY;
+    private Socket clientEndpoint;
     private DataOutputStream dosWriter;
     private DataInputStream disReader;
-    private Socket clientEndpoint;
+    private Socket clientEndpointMessage;
+    private DataInputStream disReaderMessage;
+    public Thread messageThread;
     public boolean isJoined;
     public boolean isRegistered;
     public String command;
     public String stringAppend;
     public String Name;
-
+    
+    public String receivedMessage = "";
+    public boolean newMessage = false;
+    
     public ClientClass() {
         this.FILE_DIRECTORY = System.getProperty("user.dir") + "\\client\\";
         this.isJoined = false;
@@ -44,6 +59,23 @@ public class ClientClass {
                         System.out.println("Connection successful!");
                         isJoined = true;
                         verifyReply(Message, "");
+
+                        messageThread = new Thread(() -> {
+                            try {
+                                // Receive the function to be performed
+                                while (true){
+                                    receivedMessage = disReaderMessage.readUTF();
+                                    System.out.println(receivedMessage);
+                                    newMessage = true;
+                                }
+                            }
+                            catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }); 
+                        // Start thread
+                        messageThread.start();
+
                         return;
                     }
 
@@ -82,11 +114,13 @@ public class ClientClass {
                 throw new Exception();
 
             clientEndpoint = new Socket(ipAddress, nPort);
+            clientEndpointMessage = new Socket(ipAddress, nPort);
             System.out.println(ipAddress + ": Connecting to server at " + clientEndpoint.getRemoteSocketAddress() + "\n");
     
             // Initialize input and output streams
             dosWriter = new DataOutputStream(clientEndpoint.getOutputStream());
             disReader = new DataInputStream(clientEndpoint.getInputStream());
+            disReaderMessage = new DataInputStream(clientEndpointMessage.getInputStream());
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -97,16 +131,16 @@ public class ClientClass {
         stringAppend = Name + "List of available commands: \n";
 
         if (!isJoined) {
-            stringAppend = stringAppend + "/join: Connects to the server [Usage: /join {IP Address} {Port Number}]\n";
+            stringAppend = "/join: Connects to the server [Usage: /join {IP Address} {Port Number}]\n";
         }
         else if (isJoined && !isRegistered) {
-            stringAppend = stringAppend + "/register: Registers a unique alias [Usage: /register {Username}]\n";
+            stringAppend = "/register: Registers a unique alias [Usage: /register {Username}]\n";
         }
         else if (isJoined && isRegistered) {
-            stringAppend = stringAppend + "/leave: Disconnects from the server [usage: /leave]\n";
-            stringAppend = stringAppend + "/store: Stores a file in the server [usage: /store {File Name}]\n";
-            stringAppend = stringAppend + "/dir: Requests a directory file list from the server [usage: /dir]\n";
-            stringAppend = stringAppend + "/get: Downloads a file from the server [usage: /get {File Name}]\n";
+            stringAppend = "/leave: Disconnects from the server [usage: /leave]\n";
+            stringAppend = "/store: Stores a file in the server [usage: /store {File Name}]\n";
+            stringAppend = "/dir: Requests a directory file list from the server [usage: /dir]\n";
+            stringAppend = "/get: Downloads a file from the server [usage: /get {File Name}]\n";
         }
         System.out.println("");
     }
@@ -131,8 +165,12 @@ public class ClientClass {
                     verifyReply(Message, Name);
                     return;
                 }
+
+                else if (Message.equals("USER HANDLE ALREADY TAKEN")) {
+                    verifyReply(Message, Name);
+                }
                 
-                if (stringAppend.equals("Username [NULL] is a reserved username, please choose another username.")) {
+                else if (stringAppend.equals("Username [NULL] is a reserved username, please choose another username.")) {
                     verifyReply(Message, "");
                 }
                 
@@ -199,6 +237,10 @@ public class ClientClass {
                 Message = disReader.readUTF();
                 verifyReply(Message, Name);
             }
+            else if (Command.equals("/message")) {
+                Message = disReader.readUTF();
+                verifyReply(Command, Message);
+            }
             else {
                 Message = disReader.readUTF();
                 System.out.println(Message);
@@ -206,11 +248,13 @@ public class ClientClass {
             }
         }
         catch (SocketException e) {
+            e.printStackTrace();
             stringAppend = "Current server is no longer connected. Please join another server.\n";
             this.isJoined = false;
             this.isRegistered = false;
         }
         catch (EOFException e) {
+            e.printStackTrace();
             stringAppend = "Current server is no longer connected. Please join another server.\n";
             this.isJoined = false;
             this.isRegistered = false;
@@ -274,6 +318,15 @@ public class ClientClass {
             case "DISPLAY COMMANDS":
                 getHelp(Name);
                 break;
+            case "USER NOT FOUND":
+                stringAppend = Name + " User not found.\n";
+                break;
+            case "MESSAGE SENT":
+                stringAppend = Name + " Message sent.\n";
+                break;
+            case "BROADCAST SENT":
+                stringAppend = Name + " Broadcast sent.\n";
+                break;
             default:
                 break;
         }
@@ -308,7 +361,7 @@ public class ClientClass {
                 fileOutputStream.close();
                 System.out.println(disReader.readUTF());
                 verifyReply("FILE STORED", Name);
-                stringAppend = stringAppend + FILE_DIRECTORY + filename + "\n";
+                stringAppend = FILE_DIRECTORY + filename + "\n";
             }
 			else {
                 verifyReply("FILE NOT FOUND", Name);
