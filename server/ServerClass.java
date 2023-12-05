@@ -14,7 +14,7 @@ import java.io.*;
 
 public class ServerClass {
 
-    private static final int SERVER_PORT = 4000;
+    private static final int SERVER_PORT = 12345;
 	private static final String FILE_DIRECTORY = System.getProperty("user.dir") + "\\server\\files\\";
 
     private static ArrayList<UserClass> userList = new ArrayList<UserClass>();
