@@ -68,6 +68,10 @@ public class ClientClass {
             System.out.print("Enter a command: ");
             String command[] = initCommand.split(" ");
 
+<<<<<<< HEAD
+=======
+            //String mainCommand = command[0];
+>>>>>>> ea261bf7396d783631e3269c64f1f2cc3423a718
             String ipAddress = command[1];
             int nPort = Integer.parseInt(command[2]);
 
@@ -103,7 +107,14 @@ public class ClientClass {
 
     public void checkRegister (String regCommand) {
         try {
+<<<<<<< HEAD
             
+=======
+            //String command[] = regCommand.split(" ");
+
+            //String mainCommand = command[0];
+
+>>>>>>> ea261bf7396d783631e3269c64f1f2cc3423a718
             Name = registerUser(regCommand);
             String Message = "NULL";
             if (!Name.equals("NULL")) {
@@ -210,7 +221,7 @@ public class ClientClass {
                 stringAppend = "User handle " + Name + " registered successfully!\n";
                 break;
             case "USER HANDLE ALREADY TAKEN":
-                stringAppend = "That username is already taken. Please select another usrename...\n";
+                stringAppend = "That username is already taken. Please select another username...\n";
                 break;
             case "NOT REGISTERED":
                 stringAppend = "This command is only available to registered users. Please register first.\n";
