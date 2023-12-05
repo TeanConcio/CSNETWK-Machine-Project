@@ -55,3 +55,10 @@
 - Reactive GUI
 - Real-Time Messaging and Broadcasting
 - Inbox feature
+
+
+
+## Disclaimers
+- Filenames with whitespaces cannot be processed
+- Usernames with "/" will make a subfolder
+- "NULL" is a reserved username
