@@ -199,6 +199,7 @@ public class ClientClass {
             stringAppend = stringAppend + "/join: Connects to the server [Usage: /join {IP Address} {Port Number}]\n";
         }
         else if (isJoined && !isRegistered) {
+            stringAppend = stringAppend + "/leave: Disconnects from the server [usage: /leave]\n";
             stringAppend = stringAppend + "/register: Registers a unique alias [Usage: /register {Username}]\n";
         }
         else if (isJoined && isRegistered) {
@@ -229,7 +230,7 @@ public class ClientClass {
                 if (Message.equals("USER HANDLE REGISTERED")) {
                     System.out.println("User handle [" + Name + "] registered successfully!");
                     isRegistered = true;
-                    FILE_DIRECTORY = FILE_DIRECTORY + Name + "\\";
+                    FILE_DIRECTORY = System.getProperty("user.dir") + "\\client\\" + Name + "\\";
                     verifyReply(Message, Name);
                     return;
                 }
@@ -246,6 +247,10 @@ public class ClientClass {
             }
             else if (mainCommand.equals("/?")) {
                 getHelp(""); 
+            }
+            else if (mainCommand.equals("/leave")) {
+                verifyReply("USER LEFT", "");
+                leaveServer();
             }
             else {
                 stringAppend = "Invalid command or command parameters. Please use '/?' to view available commands.\n";
@@ -377,7 +382,7 @@ public class ClientClass {
                 fileOutputStream.close();
                 System.out.println(disReader.readUTF());
                 verifyReply("FILE STORED", Name);
-                stringAppend = FILE_DIRECTORY + filename + "\n";
+                stringAppend += FILE_DIRECTORY + filename + "\n";
             }
 			else {
                 verifyReply("FILE NOT FOUND", Name);
