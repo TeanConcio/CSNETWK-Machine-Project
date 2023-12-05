@@ -113,29 +113,37 @@ public class ClientClass {
 
     public void checkRegister (String regCommand) {
         try {
-            //String command[] = regCommand.split(" ");
+            String command[] = regCommand.split(" ");
 
-            //String mainCommand = command[0];
+            String mainCommand = command[0];
 
-            Name = registerUser(regCommand);
-            String Message = "NULL";
-            if (!Name.equals("NULL")) {
-                Message = disReader.readUTF();
-            }
+            if (mainCommand.equals("/register") && command.length == 2) {
+                Name = registerUser(regCommand);
+                String Message = "NULL";
+                if (!Name.equals("NULL")) {
+                    Message = disReader.readUTF();
+                }
 
-            if (Message.equals("USER HANDLE REGISTERED")) {
-                System.out.println("User handle [" + Name + "] registered successfully!");
-                isRegistered = true;
-                FILE_DIRECTORY = FILE_DIRECTORY + Name + "\\";
-                verifyReply(Message, Name);
-                return;
+                if (Message.equals("USER HANDLE REGISTERED")) {
+                    System.out.println("User handle [" + Name + "] registered successfully!");
+                    isRegistered = true;
+                    FILE_DIRECTORY = FILE_DIRECTORY + Name + "\\";
+                    verifyReply(Message, Name);
+                    return;
+                }
+                
+                if (stringAppend.equals("Username [NULL] is a reserved username, please choose another username.")) {
+                    verifyReply(Message, "");
+                }
+                
+                isRegistered = false;
             }
-            
-            if (stringAppend.equals("Username [NULL] is a reserved username, please choose another username.")) {
-                verifyReply(Message, "");
+            else if (mainCommand.equals("/?")) {
+                getHelp(""); 
             }
-            
-            isRegistered = false;
+            else {
+                stringAppend = "Invalid command or command parameters. Please use '/?' to view available commands.\n";
+            }
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -170,15 +178,6 @@ public class ClientClass {
 
     public void routeCommands (String fullCommand) {
         try {
-
-            // Check if server is still connected
-            if (clientEndpoint.isClosed()) {
-                stringAppend = "Current server is no longer connected. Please join another server.\n";
-                this.isJoined = false;
-                this.isRegistered = false;
-                return;
-            }
-
             dosWriter.writeUTF(fullCommand);
             String Command = fullCommand.split(" ")[0];
             String Message;
@@ -205,6 +204,16 @@ public class ClientClass {
                 System.out.println(Message);
                 verifyReply(Message, Name);
             }
+        }
+        catch (SocketException e) {
+            stringAppend = "Current server is no longer connected. Please join another server.\n";
+            this.isJoined = false;
+            this.isRegistered = false;
+        }
+        catch (EOFException e) {
+            stringAppend = "Current server is no longer connected. Please join another server.\n";
+            this.isJoined = false;
+            this.isRegistered = false;
         }
         catch (Exception e) {
             e.printStackTrace();
