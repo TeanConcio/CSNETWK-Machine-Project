@@ -131,16 +131,18 @@ public class ClientClass {
         stringAppend = Name + "List of available commands: \n";
 
         if (!isJoined) {
-            stringAppend = "/join: Connects to the server [Usage: /join {IP Address} {Port Number}]\n";
+            stringAppend = stringAppend + "/join: Connects to the server [Usage: /join {IP Address} {Port Number}]\n";
         }
         else if (isJoined && !isRegistered) {
-            stringAppend = "/register: Registers a unique alias [Usage: /register {Username}]\n";
+            stringAppend = stringAppend + "/register: Registers a unique alias [Usage: /register {Username}]\n";
         }
         else if (isJoined && isRegistered) {
-            stringAppend = "/leave: Disconnects from the server [usage: /leave]\n";
-            stringAppend = "/store: Stores a file in the server [usage: /store {File Name}]\n";
-            stringAppend = "/dir: Requests a directory file list from the server [usage: /dir]\n";
-            stringAppend = "/get: Downloads a file from the server [usage: /get {File Name}]\n";
+            stringAppend = stringAppend + "/leave: Disconnects from the server [usage: /leave]\n";
+            stringAppend = stringAppend + "/store: Stores a file in the server [usage: /store {File Name}]\n";
+            stringAppend = stringAppend + "/dir: Requests a directory file list from the server [usage: /dir]\n";
+            stringAppend = stringAppend + "/get: Downloads a file from the server [usage: /get {File Name}]\n";
+            stringAppend = stringAppend + "/message: Sends a message to a user [usage: /message {Recipient} {Message}]\n";
+            stringAppend = stringAppend + "/broadcast: Sends a message to all users [usage: /broadcast {Message}]\n";
         }
         System.out.println("");
     }
@@ -239,7 +241,8 @@ public class ClientClass {
             }
             else if (Command.equals("/message")) {
                 Message = disReader.readUTF();
-                verifyReply(Command, Message);
+                verifyReply(Message, Name);
+                System.out.println(stringAppend);
             }
             else {
                 Message = disReader.readUTF();
@@ -322,7 +325,6 @@ public class ClientClass {
                 stringAppend = Name + " User not found.\n";
                 break;
             case "MESSAGE SENT":
-                stringAppend = Name + " Message sent.\n";
                 break;
             case "BROADCAST SENT":
                 stringAppend = Name + " Broadcast sent.\n";

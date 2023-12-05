@@ -18,6 +18,7 @@ public class ClientGUI {
     private JTextArea messageArea;
     private JTextField inputField;
     private JButton submitButton;
+    private String previousMessage;
 
     public ClientGUI(ClientClass clientClass) {
         this.clientClass = clientClass;
@@ -113,7 +114,7 @@ public class ClientGUI {
             };
             
             worker.execute();
-
+            previousMessage = "";
             // New thread to listen for new data
             new Thread(() -> {
                 try {
@@ -122,9 +123,12 @@ public class ClientGUI {
                         if (clientClass.newMessage) {
                             // Update the GUI using SwingUtilities.invokeLater()
                             SwingUtilities.invokeLater(() -> {
-
                                 clientClass.newMessage = false;
-                                messageArea.append(clientClass.receivedMessage + "\n");
+                                if (!clientClass.receivedMessage.equals(previousMessage)) {
+                                    messageArea.append(clientClass.receivedMessage + "\n");
+                                }
+                                previousMessage = clientClass.receivedMessage;
+                                System.out.println(previousMessage);
                             });
                         }
                         // Sleep for a while to avoid busy waiting

@@ -9,8 +9,11 @@
 package server;
 
 import java.net.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.io.*;
+
+import java.util.Date;  
 
 public class ServerClass {
 
@@ -398,9 +401,12 @@ public class ServerClass {
 				return;
 			}
 
+			SimpleDateFormat Sent = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");  
+			Date date = new Date();  
+			String dateTimeSent = "[" + Sent.format(date) + "] ";
 			// Send message to user
-			userList.get(userIndex).dosWriterMessage.writeUTF(user.userHandle + ": " + message);
-			user.dosWriterMessage.writeUTF(user.userHandle + ": " + message);
+			userList.get(userIndex).dosWriterMessage.writeUTF(dateTimeSent + user.userHandle + ": " + message);
+			user.dosWriterMessage.writeUTF(dateTimeSent + "To " + userList.get(userIndex).userHandle + ": " + message);
 
 			// Send Response
 			user.dosWriter.writeUTF("MESSAGE SENT");
@@ -415,10 +421,13 @@ public class ServerClass {
 	public static void broadcast(UserClass user, String message) {
 
 		try {
+			SimpleDateFormat Sent = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");  
+			Date date = new Date();  
+			String dateTimeSent = "[" + Sent.format(date) + "] ";
 			// Send message to all users
 			for (UserClass userClass : userList) {
 				if (userClass.userHandle != null) {
-					userClass.dosWriterMessage.writeUTF(user.userHandle + "(broadcast) : " + message);
+					userClass.dosWriterMessage.writeUTF(dateTimeSent + "BROADCAST [" + user.userHandle + "]: " + message);
 				}
 			}
 
