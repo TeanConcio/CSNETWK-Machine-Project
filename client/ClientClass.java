@@ -249,8 +249,8 @@ public class ClientClass {
                 getHelp(""); 
             }
             else if (mainCommand.equals("/leave")) {
+                dosWriter.writeUTF(mainCommand);
                 verifyReply("USER LEFT", "");
-                leaveServer();
             }
             else {
                 stringAppend = "Invalid command or command parameters. Please use '/?' to view available commands.\n";
@@ -288,6 +288,9 @@ public class ClientClass {
 
     public void leaveServer () {
         try {
+            isJoined = false;
+            isRegistered = false;
+            this.Name = "";
             clientEndpoint.close();
         }
         catch (Exception e) {
